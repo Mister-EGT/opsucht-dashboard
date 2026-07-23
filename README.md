@@ -4,7 +4,7 @@ Eine produktionsreife, inoffizielle Wirtschafts- und Analyseplattform fÃ¼r die Ã
 
 > Inoffizielles Community-Dashboard. Nicht mit OPSUCHT.NET verbunden.
 
-Live: [opsucht-wirtschaftsdashboard.mister-e1.chatgpt.site](https://opsucht-wirtschaftsdashboard.mister-e1.chatgpt.site)
+Live: [opsucht-dashboard.vercel.app](opsucht-dashboard.vercel.app)
 
 ## Funktionsumfang
 
