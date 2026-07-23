@@ -1,0 +1,12 @@
+node_modules/
+.next/
+out/
+dist/
+.wrangler/
+coverage/
+.env
+.env.local
+.DS_Store
+*.log
+*.tsbuildinfo
+research/
