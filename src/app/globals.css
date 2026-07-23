@@ -274,6 +274,7 @@ select.field { cursor: pointer; }
 .section-grid { display: grid; gap: 18px; }
 .dashboard-grid { grid-template-columns: minmax(0, 1.45fr) minmax(300px, .75fr); }
 .stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+.current-price-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .list-body { padding: 5px 0; }
 .list-row { min-height: 59px; display: flex; align-items: center; gap: 11px; padding: 9px 18px; border-bottom: 1px solid var(--border); }
 .list-row:last-child { border-bottom: 0; }
