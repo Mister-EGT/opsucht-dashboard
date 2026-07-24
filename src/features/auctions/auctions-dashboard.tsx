@@ -4,6 +4,7 @@
 
 import {
   type ColumnDef,
+  type PaginationState,
   type SortingState,
   flexRender,
   getCoreRowModel,
@@ -49,6 +50,7 @@ export function AuctionsDashboard() {
   const [filters, setFilters] = useState(() => parseAuctionFilters(searchKey));
   const { query, category, minimum, maximum, soon, view } = filters;
   const [sorting, setSorting] = useState<SortingState>([{ id: "endTime", desc: false }]);
+  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
   const [selected, setSelected] = useState<Auction | null>(null);
   const now = useClock();
   const favorites = useFavorites();
@@ -89,6 +91,15 @@ export function AuctionsDashboard() {
     });
   }, [auctions.data, query, minimum, maximum, soon, filterNow]);
 
+  useEffect(() => {
+    setPagination((current) => current.pageIndex === 0 ? current : { ...current, pageIndex: 0 });
+  }, [query, category, minimum, maximum, soon]);
+
+  useEffect(() => {
+    const lastPageIndex = Math.max(0, Math.ceil(filtered.length / pagination.pageSize) - 1);
+    setPagination((current) => current.pageIndex > lastPageIndex ? { ...current, pageIndex: lastPageIndex } : current);
+  }, [filtered.length, pagination.pageSize]);
+
   const columns = useMemo<ColumnDef<Auction>[]>(() => [
     {
       id: "favorite",
@@ -127,12 +138,13 @@ export function AuctionsDashboard() {
   const table = useReactTable({
     data: filtered,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
+    autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 25 } },
   });
 
   const clearFilters = () => {
