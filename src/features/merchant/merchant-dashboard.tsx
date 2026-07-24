@@ -11,7 +11,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { ArrowDown, ArrowUp, ArrowUpDown, Calculator, Heart, Search } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useFavorites } from "@/components/favorites-provider";
 import { DataFreshness } from "@/components/data-freshness";
@@ -31,7 +31,6 @@ import type { ParsedMerchantRate } from "@/lib/types";
 
 export function MerchantDashboard() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const searchKey = searchParams.toString();
   const ratesQuery = useMerchantRates();
   const favorites = useFavorites();
@@ -46,10 +45,16 @@ export function MerchantDashboard() {
     setQuery((current) => current === next ? current : next);
   }, [searchKey]);
 
-  const updateQuery = (value: string) => {
-    setQuery(value);
-    router.replace(merchantFilterHref(value), { scroll: false });
-  };
+  useEffect(() => {
+    const href = merchantFilterHref(query);
+    if (`${window.location.pathname}${window.location.search}` === href) return;
+
+    const timer = window.setTimeout(() => {
+      window.history.replaceState(window.history.state, "", href);
+    }, 250);
+
+    return () => window.clearTimeout(timer);
+  }, [query]);
 
   const columns = useMemo<ColumnDef<ParsedMerchantRate>[]>(() => [
     { id: "favorite", header: () => <span className="sr-only">Favorit</span>, enableSorting: false, cell: ({ row }) => <Button size="icon" variant="ghost" onClick={() => favorites.toggleMerchant(row.original.id)} aria-label="Favorit umschalten"><Heart size={16} fill={favorites.isMerchantFavorite(row.original.id) ? "currentColor" : "none"} /></Button> },
@@ -73,8 +78,8 @@ export function MerchantDashboard() {
       {ratesQuery.data?.meta.stale ? <StaleBanner message={ratesQuery.data.meta.error} /> : null}
       <MerchantCalculator rates={rates} />
       <Card className="mt-5">
-        <div className="toolbar"><div className="field-group search-field"><FieldLabel htmlFor="merchant-search">Händleritem suchen</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="merchant-search" value={query} onChange={(event) => updateQuery(event.target.value)} placeholder="Itemname, Material oder Zielwährung" /></div></div><span className="toolbar-summary">{filtered.length} von {rates.length} Kursen</span></div>
-        {filtered.length === 0 ? <div className="p-4"><EmptyState title="Kein Händleritem gefunden" description="Der Suchbegriff passt zu keinem aktuellen Händlerkurs." action={<Button onClick={() => updateQuery("")}>Suche löschen</Button>} /></div> : <><div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div><div className="mobile-card-list">{table.getRowModel().rows.map((row) => <MerchantCard key={row.original.id} rate={row.original} />)}</div></>}
+        <div className="toolbar"><div className="field-group search-field"><FieldLabel htmlFor="merchant-search">Händleritem suchen</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="merchant-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Itemname, Material oder Zielwährung" /></div></div><span className="toolbar-summary">{filtered.length} von {rates.length} Kursen</span></div>
+        {filtered.length === 0 ? <div className="p-4"><EmptyState title="Kein Händleritem gefunden" description="Der Suchbegriff passt zu keinem aktuellen Händlerkurs." action={<Button onClick={() => setQuery("")}>Suche löschen</Button>} /></div> : <><div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div><div className="mobile-card-list">{table.getRowModel().rows.map((row) => <MerchantCard key={row.original.id} rate={row.original} />)}</div></>}
       </Card>
     </>
   );
