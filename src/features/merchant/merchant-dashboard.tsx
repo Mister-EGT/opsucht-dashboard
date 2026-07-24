@@ -24,7 +24,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { useMerchantRates } from "@/hooks/use-opsucht";
-import { merchantFilterHref, parseMerchantQuery } from "@/lib/filter-url";
+import { parseMerchantQuery } from "@/lib/filter-url";
 import { formatEconomyValue, formatExactValue, formatMaterialName, formatPercentNumber, formatSignedPercentNumber } from "@/lib/format";
 import { calculateRequiredItems, calculateShardValue, normalizeMerchantRates, normalizeWholeItemQuantity } from "@/lib/merchant";
 import type { ParsedMerchantRate } from "@/lib/types";
@@ -44,17 +44,6 @@ export function MerchantDashboard() {
     const next = parseMerchantQuery(searchKey);
     setQuery((current) => current === next ? current : next);
   }, [searchKey]);
-
-  useEffect(() => {
-    const href = merchantFilterHref(query);
-    if (`${window.location.pathname}${window.location.search}` === href) return;
-
-    const timer = window.setTimeout(() => {
-      window.history.replaceState(window.history.state, "", href);
-    }, 250);
-
-    return () => window.clearTimeout(timer);
-  }, [query]);
 
   const columns = useMemo<ColumnDef<ParsedMerchantRate>[]>(() => [
     { id: "favorite", header: () => <span className="sr-only">Favorit</span>, enableSorting: false, cell: ({ row }) => <Button size="icon" variant="ghost" onClick={() => favorites.toggleMerchant(row.original.id)} aria-label="Favorit umschalten"><Heart size={16} fill={favorites.isMerchantFavorite(row.original.id) ? "currentColor" : "none"} /></Button> },
