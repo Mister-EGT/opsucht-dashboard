@@ -48,9 +48,8 @@ export function AuctionsDashboard() {
   const router = useRouter();
   const searchKey = searchParams.toString();
   const [filters, setFilters] = useState(() => parseAuctionFilters(searchKey));
-  const { query, category, minimum, maximum, soon, view } = filters;
+  const { query, category, minimum, maximum, soon, view, page } = filters;
   const [sorting, setSorting] = useState<SortingState>([{ id: "endTime", desc: false }]);
-  const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
   const [selected, setSelected] = useState<Auction | null>(null);
   const now = useClock();
   const favorites = useFavorites();
@@ -63,11 +62,12 @@ export function AuctionsDashboard() {
     setFilters((current) => JSON.stringify(current) === JSON.stringify(next) ? current : next);
   }, [searchKey]);
 
-  const updateFilters = (patch: Partial<typeof filters>) => {
-    const next = { ...filters, ...patch };
+  const updateFilters = useCallback((patch: Partial<typeof filters>) => {
+    const resetsPage = Object.keys(patch).some((key) => key !== "page" && key !== "view");
+    const next = { ...filters, ...patch, page: resetsPage ? 1 : patch.page ?? filters.page };
     setFilters(next);
     router.replace(auctionFilterHref(next), { scroll: false });
-  };
+  }, [filters, router]);
 
   const copyMaterial = useCallback(async (material: string) => {
     const copied = await copyToClipboard(material);
@@ -91,14 +91,16 @@ export function AuctionsDashboard() {
     });
   }, [auctions.data, query, minimum, maximum, soon, filterNow]);
 
-  useEffect(() => {
-    setPagination((current) => current.pageIndex === 0 ? current : { ...current, pageIndex: 0 });
-  }, [query, category, minimum, maximum, soon]);
+  const pagination = useMemo<PaginationState>(() => ({
+    pageIndex: page - 1,
+    pageSize: 25,
+  }), [page]);
 
   useEffect(() => {
-    const lastPageIndex = Math.max(0, Math.ceil(filtered.length / pagination.pageSize) - 1);
-    setPagination((current) => current.pageIndex > lastPageIndex ? { ...current, pageIndex: lastPageIndex } : current);
-  }, [filtered.length, pagination.pageSize]);
+    if (auctions.isFetching || !auctions.data || filtered.length === 0) return;
+    const lastPage = Math.max(1, Math.ceil(filtered.length / pagination.pageSize));
+    if (page > lastPage) updateFilters({ page: lastPage });
+  }, [auctions.isFetching, auctions.data, filtered.length, page, pagination.pageSize, updateFilters]);
 
   const columns = useMemo<ColumnDef<Auction>[]>(() => [
     {
@@ -140,7 +142,10 @@ export function AuctionsDashboard() {
     columns,
     state: { sorting, pagination },
     onSortingChange: setSorting,
-    onPaginationChange: setPagination,
+    onPaginationChange: (updater) => {
+      const next = typeof updater === "function" ? updater(pagination) : updater;
+      updateFilters({ page: next.pageIndex + 1 });
+    },
     autoResetPageIndex: false,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
