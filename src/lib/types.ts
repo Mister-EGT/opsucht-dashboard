@@ -52,6 +52,7 @@ export interface MarketRow {
 
 export interface ParsedMerchantRate extends MerchantRate {
   id: string;
+  icon: string;
   material: string;
   materialKey: string;
   displayName: string;
