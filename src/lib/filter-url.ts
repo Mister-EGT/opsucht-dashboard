@@ -17,6 +17,7 @@ export interface AuctionFilterState {
   maximum: string;
   soon: boolean;
   view: AuctionViewMode;
+  page: number;
 }
 
 function paramsFrom(value: string): URLSearchParams {
@@ -45,6 +46,7 @@ export function marketFilterHref(filters: MarketFilterState): string {
 
 export function parseAuctionFilters(value: string): AuctionFilterState {
   const params = paramsFrom(value);
+  const page = Number(params.get("page"));
   return {
     query: params.get("q") ?? "",
     category: params.get("category") ?? "",
@@ -52,6 +54,7 @@ export function parseAuctionFilters(value: string): AuctionFilterState {
     maximum: params.get("max") ?? "",
     soon: params.get("soon") === "1",
     view: params.get("view") === "cards" ? "cards" : "table",
+    page: Number.isSafeInteger(page) && page >= 1 ? page : 1,
   };
 }
 
@@ -63,6 +66,7 @@ export function auctionFilterHref(filters: AuctionFilterState): string {
   if (filters.maximum) params.set("max", filters.maximum);
   if (filters.soon) params.set("soon", "1");
   if (filters.view === "cards") params.set("view", filters.view);
+  if (filters.page > 1) params.set("page", String(filters.page));
   return `/auctions${params.size ? `?${params}` : ""}`;
 }
 
