@@ -75,7 +75,7 @@ export function FavoritesDashboard() {
             <div className="favorite-list">
               {favoriteMerchants.length ? favoriteMerchants.map(({ id, rate }) => (
                 <article className="favorite-row" key={id}>
-                  <ItemIcon name={rate?.displayName ?? formatMaterialName(id)} size={41} />
+                  <ItemIcon src={rate?.icon} name={rate?.displayName ?? formatMaterialName(id)} size={41} />
                   <div className="favorite-main"><Link href={`/merchant?q=${encodeURIComponent(rate?.displayName ?? id)}`}><strong>{rate?.displayName ?? formatMaterialName(id)}</strong></Link><small>{rate ? rate.materialKey : `${id} · Aktuell nicht im Händlerfeed`}</small></div>
                   <div className="favorite-value"><strong>{rate ? `${formatEconomyValue(rate.exchangeRate)} OPShards` : "Nicht verfügbar"}</strong><small>Wechselkurs</small></div>
                   <Button variant="ghost" size="icon" onClick={() => favorites.toggleMerchant(id)} aria-label="Händleritem entfernen"><Trash2 size={16} /></Button>
