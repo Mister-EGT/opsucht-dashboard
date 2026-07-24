@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateRequiredItems, calculateShardValue, normalizeMerchantRates, normalizeWholeItemQuantity, parseMerchantSource } from "@/lib/merchant";
+import { calculateRequiredItems, calculateShardValue, normalizeMerchantRates, normalizeWholeItemQuantity, parseMerchantSource, resolveMerchantItemIcon } from "@/lib/merchant";
 
 const customSource = 'minecraft:paper[custom_name={extra: [{bold: 1b, color: "#926428", text: "Holzbündel"}], text: ""},custom_model_data={floats: [625.0f]},item_name={text: "Holzbündel"}]';
 
@@ -29,6 +29,19 @@ describe("Händlerparser und OPShards-Rechner", () => {
     const [rate] = normalizeMerchantRates([{ source: "diamond_block", target: "opshards", base: 12, exchangeRate: 13.2 }]);
     expect(rate?.deviation).toBeCloseTo(1.2);
     expect(rate?.deviationPercent).toBeCloseTo(10);
+  });
+
+  it("ordnet den beiden Standard-Händleritems die korrekten Minecraft-Icons zu", () => {
+    expect(resolveMerchantItemIcon("diamond_block", null)).toBe("https://img.mc-api.io/diamond_block.png");
+    expect(resolveMerchantItemIcon("netherite_ingot", null)).toBe("https://img.mc-api.io/netherite_ingot.png");
+  });
+
+  it.each([
+    ["Gräbergemisch", "https://i.postimg.cc/x8Jt4M99/grabergemisch.png"],
+    ["Holzbündel", "https://i.postimg.cc/yY9zJS0W/holz-gemisch.png"],
+    ["Steinplatten", "https://i.postimg.cc/6603DM29/Unbenannt.png"],
+  ])("ordnet dem Custom-Item %s das Bild von opsucht.info zu", (name, icon) => {
+    expect(resolveMerchantItemIcon("paper", name)).toBe(icon);
   });
 
   it("rundet benötigte Minecraft-Items immer auf ganze Stück auf", () => {
