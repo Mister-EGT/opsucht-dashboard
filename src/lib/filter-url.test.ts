@@ -27,8 +27,8 @@ describe("URL-gebundene Filter", () => {
     });
   });
 
-  it("erhält alle Auktionsfilter einschließlich Kartenansicht und Bald-Filter", () => {
-    const parsed = parseAuctionFilters("q=Helm&category=custom_items&min=10%2C5&max=500&soon=1&view=cards");
+  it("erhält alle Auktionsfilter einschließlich Kartenansicht, Bald-Filter und Seite", () => {
+    const parsed = parseAuctionFilters("q=Helm&category=custom_items&min=10%2C5&max=500&soon=1&view=cards&page=4");
     expect(parsed).toEqual({
       query: "Helm",
       category: "custom_items",
@@ -36,8 +36,14 @@ describe("URL-gebundene Filter", () => {
       maximum: "500",
       soon: true,
       view: "cards",
+      page: 4,
     });
     expect(parseAuctionFilters(auctionFilterHref(parsed).split("?")[1] ?? "")).toEqual(parsed);
+  });
+
+  it("fällt bei einer ungültigen Auktionsseite sicher auf Seite 1 zurück", () => {
+    expect(parseAuctionFilters("page=0").page).toBe(1);
+    expect(parseAuctionFilters("page=unbekannt").page).toBe(1);
   });
 
   it("kodiert Händler-Suchbegriffe für direkte und nachträgliche Navigation", () => {
