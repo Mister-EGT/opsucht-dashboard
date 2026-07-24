@@ -100,7 +100,7 @@ export function GlobalSearch() {
             ))}</SearchGroup> : null}
             {results.merchant.length ? <SearchGroup title="Händler" icon={Tag}>{results.merchant.map((item) => (
               <Link key={item.id} href={`/merchant?q=${encodeURIComponent(item.displayName)}`} onClick={close} className="search-result">
-                <ItemIcon name={item.displayName} size={34} />
+                <ItemIcon src={item.icon} name={item.displayName} size={34} />
                 <span><strong>{item.displayName}</strong><small>{item.materialKey} · {formatEconomyValue(item.exchangeRate)} OPShards</small></span>
               </Link>
             ))}</SearchGroup> : null}
