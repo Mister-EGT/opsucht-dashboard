@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { resolveAuctionItemIcon } from "@/lib/auction-item-icons";
 
 const finiteNumber = z.number().finite();
 const nonNegativeNumber = finiteNumber.nonnegative();
@@ -29,7 +30,14 @@ export const auctionSchema = z
     startTime: z.iso.datetime({ offset: true }),
     endTime: z.iso.datetime({ offset: true }),
   })
-  .passthrough();
+  .passthrough()
+  .transform((auction): typeof auction => ({
+    ...auction,
+    item: {
+      ...auction.item,
+      icon: resolveAuctionItemIcon(auction.item),
+    },
+  }));
 
 export const auctionsSchema = z.array(auctionSchema);
 
