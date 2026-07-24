@@ -103,7 +103,7 @@ export function MarketDashboard() {
   const unavailableAreas = [items.isError ? "Item-Metadaten" : null, categories.isError ? "Marktkategorien" : null]
     .filter((area): area is string => area !== null);
   return (
-    <>
+    <div className="market-dashboard">
       <PageHeader eyebrow="Marktdaten" title="Marktübersicht" description="BUY- und SELL-Kurse werden anhand von orderSide zugeordnet, unabhängig von ihrer Reihenfolge in der API." actions={<><DataFreshness meta={prices.data?.meta} fetching={prices.isFetching} /><RefreshButton fetching={prices.isFetching || items.isFetching || categories.isFetching} onRefresh={() => { prices.refetch(); items.refetch(); categories.refetch(); }} /></>} />
       {prices.data?.meta.stale ? <StaleBanner message={prices.data.meta.error} /> : null}
       {unavailableAreas.length ? <StaleBanner message={`Zusatzdaten sind vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Die vorhandenen Marktpreise werden weiterhin angezeigt.`} /> : null}
@@ -128,7 +128,7 @@ export function MarketDashboard() {
         )}
       </Card>
       <p className="method-note">Absoluter Spread = höherer Preis minus niedrigerer Preis. Relativer Spread = absoluter Spread geteilt durch den niedrigeren Preis. Ein API-Wert von 0 bei gleichzeitig 0 aktiven Aufträgen wird als fehlender Kurs behandelt.</p>
-    </>
+    </div>
   );
 }
 
