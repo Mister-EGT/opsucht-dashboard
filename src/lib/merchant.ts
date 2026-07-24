@@ -5,6 +5,17 @@ import { formatMaterialName } from "@/lib/format";
 const customModelPattern = /custom_model_data=(?:\{[^}]*?\[\s*(\d+)(?:\.\d+)?f?|(\d+))/i;
 const displayNamePattern = /text:\s*"([^"]+)"/g;
 
+const merchantCustomIcons: Record<string, string> = {
+  "Gräbergemisch": "https://i.postimg.cc/x8Jt4M99/grabergemisch.png",
+  "Holzbündel": "https://i.postimg.cc/yY9zJS0W/holz-gemisch.png",
+  "Steinplatten": "https://i.postimg.cc/6603DM29/Unbenannt.png",
+};
+
+export function resolveMerchantItemIcon(material: string, customName: string | null): string {
+  if (customName && merchantCustomIcons[customName]) return merchantCustomIcons[customName];
+  return `https://img.mc-api.io/${material.toLowerCase()}.png`;
+}
+
 export function parseMerchantSource(source: string): Pick<
   ParsedMerchantRate,
   "material" | "materialKey" | "displayName" | "customName" | "customModelData" | "isCustom" | "rawSource"
@@ -47,6 +58,7 @@ export function normalizeMerchantRates(rates: MerchantRate[]): ParsedMerchantRat
       ...rate,
       ...source,
       id: source.materialKey,
+      icon: resolveMerchantItemIcon(source.material, source.customName),
       deviation,
       deviationPercent: rate.base > 0 ? (deviation / rate.base) * 100 : null,
     };
