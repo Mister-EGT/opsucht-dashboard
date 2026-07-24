@@ -262,6 +262,15 @@ select.field { cursor: pointer; }
 .auction-dialog-hero { display: flex; align-items: center; gap: 14px; }
 .auction-dialog-hero h3 { margin: 7px 0 0; font-size: 20px; }
 .auction-dialog-hero p { margin: 3px 0 0; color: var(--text-muted); font-size: 12px; }
+.auction-player-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.auction-player { min-width: 0; display: flex; align-items: center; gap: 11px; padding: 12px; border: 1px solid var(--border); border-radius: 9px; background: var(--panel-soft); }
+.auction-player-avatar { flex: 0 0 auto; width: 48px; height: 48px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); object-fit: cover; image-rendering: pixelated; }
+.auction-player-avatar-fallback { display: grid; place-items: center; color: var(--text-faint); }
+.auction-player-copy { min-width: 0; }
+.auction-player-copy span, .auction-player-copy strong, .auction-player-copy small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.auction-player-copy span { color: var(--text-muted); font-size: 9px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.auction-player-copy strong { margin-top: 4px; font-size: 13px; }
+.auction-player-copy small { margin-top: 3px; color: var(--text-muted); font-size: 10px; }
 .dialog-section { margin-top: 21px; }
 .dialog-section > h3 { margin: 0 0 10px; font-size: 12px; }
 .lore-list { margin: 0; padding: 12px 12px 12px 28px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-soft); color: var(--text-muted); font-size: 12px; }
@@ -499,6 +508,7 @@ select.field { cursor: pointer; }
   .auction-card-grid { grid-template-columns: 1fr; padding: 10px; }
   .auction-card, .auction-dialog-hero > div { min-width: 0; }
   .auction-dialog-hero h3, .auction-dialog-hero p, .lore-list { overflow-wrap: anywhere; }
+  .auction-player-grid { grid-template-columns: 1fr; }
   .dialog-footer-actions { flex-direction: column; }
   .dialog-footer-actions .button { width: 100%; }
   .dialog { width: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }
