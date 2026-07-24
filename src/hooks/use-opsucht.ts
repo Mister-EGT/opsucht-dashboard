@@ -13,6 +13,7 @@ import type {
   MerchantRate,
 } from "@/lib/schemas";
 import type { HealthResponse } from "@/lib/types";
+import type { MinecraftPlayerProfile } from "@/lib/minecraft-player";
 
 export function useAuctions(category?: string, enabled = true) {
   const suffix = category ? `?category=${encodeURIComponent(category)}` : "";
@@ -31,6 +32,24 @@ export function useAuctionCategories(enabled = true) {
     queryFn: ({ signal }) => fetchApi<AuctionCategory[]>("/api/opsucht/auction-categories", signal),
     staleTime: 30 * 60_000,
     enabled,
+  });
+}
+
+export function useMinecraftPlayer(uuid?: string | null, enabled = true) {
+  return useQuery({
+    queryKey: ["minecraft-player", uuid ?? "none"],
+    queryFn: ({ signal }) => {
+      if (!uuid) throw new Error("Keine Minecraft-UUID vorhanden.");
+      return fetchHealth<MinecraftPlayerProfile>(
+        `/api/minecraft/player/${encodeURIComponent(uuid)}`,
+        signal,
+      );
+    },
+    staleTime: 12 * 60 * 60_000,
+    gcTime: 24 * 60 * 60_000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+    enabled: enabled && Boolean(uuid),
   });
 }
 
