@@ -225,7 +225,7 @@ select.field { cursor: pointer; }
 .toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 15px; border-bottom: 1px solid var(--border); background: var(--panel-soft); }
 .toolbar .search-field { min-width: min(100%, 260px); flex: 1; }
 .toolbar-summary { margin-left: auto; align-self: center; color: var(--text-muted); font-size: 11px; }
-.category-tabs { display: flex; gap: 7px; margin-bottom: 14px; padding-bottom: 3px; overflow-x: auto; scrollbar-width: thin; }
+.category-tabs { display: flex; gap: 7px; margin-bottom: 14px; padding-bottom: 3px; overflow-x: auto; scrollbar-width: thin; overscroll-behavior-x: contain; touch-action: pan-x; }
 .category-tabs button { min-height: 39px; display: inline-flex; align-items: center; gap: 7px; padding: 0 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text-muted); font-size: 11px; font-weight: 650; white-space: nowrap; cursor: pointer; }
 .category-tabs button:hover { border-color: var(--border-strong); color: var(--text); }
 .category-tabs button.active { border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: var(--accent-soft); color: var(--accent); }
