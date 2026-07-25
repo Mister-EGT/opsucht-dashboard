@@ -38,7 +38,10 @@ export function MerchantDashboard() {
   const [sorting, setSorting] = useState<SortingState>([{ id: "displayName", desc: false }]);
   const rates = useMemo(() => normalizeMerchantRates(ratesQuery.data?.data ?? []), [ratesQuery.data]);
   const normalized = query.trim().toLocaleLowerCase("de-DE");
-  const filtered = rates.filter((rate) => `${rate.displayName} ${rate.material} ${rate.materialKey} ${rate.target}`.toLocaleLowerCase("de-DE").includes(normalized));
+  const filtered = useMemo(
+    () => rates.filter((rate) => `${rate.displayName} ${rate.material} ${rate.materialKey} ${rate.target}`.toLocaleLowerCase("de-DE").includes(normalized)),
+    [rates, normalized],
+  );
 
   useEffect(() => {
     const next = parseMerchantQuery(searchKey);
