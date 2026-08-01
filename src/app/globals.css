@@ -431,7 +431,7 @@ select.field { cursor: pointer; }
 }
 
 @media (max-width: 900px) {
-  html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; overscroll-behavior-x: none; touch-action: pan-y; }
+  html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; overscroll-behavior-x: none; }
   .sidebar { display: none; }
   .app-shell, .app-column, .main-content, .topbar, .topbar-actions { min-width: 0; }
   .market-dashboard { overflow-x: hidden; overflow-x: clip; }
