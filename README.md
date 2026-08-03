@@ -64,8 +64,6 @@ npm test
 npm run build
 ```
 
-Die vollständigen Prüfberichte mit Befunden, Korrekturen und Laufzeitergebnissen stehen in [docs/CODE_REVIEW.md](docs/CODE_REVIEW.md), [docs/CODE_REVIEW_2.md](docs/CODE_REVIEW_2.md) und [docs/QUALITY_OF_LIFE_PATCH.md](docs/QUALITY_OF_LIFE_PATCH.md).
-
 Die Tests decken insbesondere folgende Fälle ab:
 
 - Zod-Parser für reale Auktions-, Markt-, Verlauf- und Händlerformen
