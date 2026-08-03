@@ -4,14 +4,14 @@ Eine produktionsreife, inoffizielle Wirtschafts- und Analyseplattform für die �
 
 > Inoffizielles Community-Dashboard. Nicht mit OPSUCHT.NET verbunden.
 
-Live: [opsucht-dashboard.vercel.app](opsucht-dashboard.vercel.app)
+Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 
 ## Funktionsumfang
 
 - Übersichtsseite mit echten Kennzahlen, Preisextremen, stündlichen Marktbewegungen, API-Zustand, bald endenden Auktionen und Favoriten
-- Auktionshaus mit Suche, Kategorien, Preisfiltern, Echtzeit-Countdown, Tabellen- und Kartenansicht, URL-Filtern und Detaildialog
+- Auktionshaus mit Suche, Kategorien, Preisfiltern, Echtzeit-Countdown, Tabellen- und Kartenansicht, URL-Filtern, Detaildialog sowie aufgelösten Namen und Köpfen für Verkäufer und Höchstbietende
 - Marktübersicht mit der vollständigen aktuell erfassten Itemliste, Kategorien, BUY- und SELL-Kursen, Auftragsbeständen, Spreads und mobilen Karten
-- Item-Detailseiten mit vier Zeiträumen, fünf Diagrammmetriken, exakten Tooltips und Zeitraumstatistiken
+- Item-Detailseiten mit vier Zeiträumen, einem zwischen Kauf- und Verkaufskurs umschaltbaren Diagramm, exakten Tooltips und Zeitraumstatistiken
 - Händlerseite mit Parser für Minecraft-Komponentenstrings, Custom-Namen, Custom Model Data und OPShards-Rechner
 - Vergleichsrechner für mehrere Positionen mit Markt- und Händlerwerten, lokaler Speicherung sowie JSON- und CSV-Export
 - Lokale Favoriten für Marktitems, Händleritems und Auktions-Snapshots
@@ -78,6 +78,8 @@ Die Tests decken insbesondere folgende Fälle ab:
 - kontrollierte Fehler bei beschädigten oder unerwarteten Proxy-Antworten
 - Schutz des CSV-Exports vor interpretierbaren Tabellenformeln
 - neue und ältere Custom-Model-Data-Syntax
+- Normalisierung und Begrenzung zuletzt angesehener Marktitems
+- UUID-Normalisierung, Floodgate-Erkennung und Avatar-URLs für Java- und Bedrock-Spieler
 - Extraktion von Custom-Itemnamen
 - Aufrundung auf ganze Minecraft-Items
 - OPSUCHT-Verlaufstimestamps in `Europe/Berlin`
@@ -118,7 +120,7 @@ src/
 │   └── status/
 ├── hooks/                    # TanStack-Query-Hooks
 ├── lib/                      # Schemas, Parser, Formatter, Berechnungen
-└── server/                   # Upstream-Client, Cache, Retry und API-Antworten
+└── server/                   # Upstream-Clients, Cache, Retry, Spielerprofile und API-Antworten
 ```
 
 ## API-Proxy und Cache
@@ -151,6 +153,12 @@ Die zentralen Intervalle stehen in `src/server/opsucht-api.ts`:
 | Preisverlauf | 5 Minuten |
 
 Der Cache lebt im Next.js-Serverprozess. Bei einem Neustart oder bei einer neuen serverlosen Instanz beginnt die Statushistorie neu. Eine Datenbank ist für die aktuelle Funktionalität nicht erforderlich.
+
+## Minecraft-Spielerprofile
+
+Im Auktionsdialog werden die UUIDs von Verkäufer und Höchstbietendem serverseitig in Spielernamen aufgelöst und zusammen mit einem Minecraft-Kopf angezeigt. Java-Spielernamen werden mit begrenzten Fallbacks über Crafthead, PlayerDB, Ashcon und Minetools abgefragt. Floodgate-UUIDs von Bedrock-Spielern werden über die GeyserMC-API aufgelöst.
+
+Erfolgreich aufgelöste Profile bleiben zwölf Stunden im serverseitigen Speicher, nicht aufgelöste Profile zehn Minuten. Gleichzeitige Anfragen für dieselbe UUID werden dedupliziert. Der interne Route Handler validiert UUIDs und liefert ausschließlich normalisierte Profildaten an den Browser.
 
 ## Live-Untersuchung der API
 
@@ -220,6 +228,7 @@ Folgende Informationen werden ausschließlich im Browser über versionierte `loc
 - Theme-Präferenz
 - Markt-, Händler- und Auktionsfavoriten
 - Positionen des Vergleichsrechners
+- zuletzt angesehene Marktitems für die globale Suche
 
 Gespeicherte Objekte werden beim Laden defensiv geprüft. Nicht mehr aktive Auktionen bleiben als beendete Snapshots sichtbar, bis sie ausdrücklich entfernt werden.
 
@@ -248,7 +257,7 @@ Ab 680 Pixeln und darunter werden breite Markt-, Auktions- und Händlertabellen 
 3. Optional die beiden Umgebungsvariablen eintragen.
 4. Deploy ausführen.
 
-Die Route Handler benötigen eine Node.js-Runtime mit ausgehendem HTTPS-Zugriff auf `api.opsucht.net`.
+Die Route Handler benötigen eine Node.js-Runtime mit ausgehendem HTTPS-Zugriff auf `api.opsucht.net`. Für die Spielernamen und Köpfe werden außerdem die im Abschnitt „Minecraft-Spielerprofile“ genannten öffentlichen Dienste benötigt.
 
 ### Eigener Node.js-Server
 
@@ -263,6 +272,10 @@ Ein Reverse Proxy sollte HTTPS terminieren und Anfragen an den Next.js-Port weit
 ### Docker
 
 Das Projekt benötigt keine besondere Plattformlogik. Ein übliches mehrstufiges Next.js-Image mit Node.js 20 oder neuer kann `npm ci`, `npm run build:next` und `npm run start:next` ausführen. Eine Datenbank oder ein persistentes Volume ist nicht erforderlich.
+
+## Lizenz
+
+Dieses Projekt steht unter der [GNU Affero General Public License Version 3](LICENSE.md). Wer eine veränderte Version über ein Netzwerk bereitstellt, muss den Nutzern den vollständigen zugehörigen Quellcode unter derselben Lizenz zugänglich machen.
 
 ## Technische Referenzen
 
