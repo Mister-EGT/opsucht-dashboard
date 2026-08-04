@@ -1,6 +1,6 @@
 # OPSUCHT Wirtschaft
 
-Eine produktionsreife, inoffizielle Wirtschafts- und Analyseplattform für die öffentlich erreichbaren OPSUCHT-APIs. Die Anwendung verbindet aktive Auktionen, Marktpreise, Preisverläufe und Händlerkurse in einem responsiven Dashboard.
+Eine inoffizielle Wirtschafts- und Analyseplattform für die öffentlich erreichbaren OPSUCHT-APIs. Die Anwendung verbindet aktive Auktionen, Marktpreise, Preisverläufe und Händlerkurse in einem responsiven Dashboard.
 
 > Inoffizielles Community-Dashboard. Nicht mit OPSUCHT.NET verbunden.
 
