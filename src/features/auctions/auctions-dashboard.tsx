@@ -12,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Clock3, Copy, Eye, FilterX, Grid2X2, Heart, List, Search } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ChevronLeft, ChevronRight, Clock3, Copy, Eye, FilterX, Grid2X2, Heart, Layers3, List, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AuctionDialog } from "@/features/auctions/auction-dialog";
@@ -30,6 +30,7 @@ import { Card } from "@/components/ui/card";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { auctionFilterHref, parseAuctionFilters } from "@/lib/filter-url";
+import { buildAuctionCategoryNavigation } from "@/lib/auction-categories";
 import { formatMaterialName, formatRelativeTime } from "@/lib/format";
 import type { Auction } from "@/lib/schemas";
 import { cn, copyToClipboard } from "@/lib/utils";
@@ -75,6 +76,7 @@ export function AuctionsDashboard() {
   }, [notify]);
 
   const categoryNames = useMemo(() => new Map((categories.data?.data ?? []).map((item) => [item.name, item.displayName])), [categories.data]);
+  const categoryNavigation = useMemo(() => buildAuctionCategoryNavigation(categories.data?.data ?? []), [categories.data]);
   const filterNow = soon ? now : 0;
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("de-DE");
@@ -168,7 +170,7 @@ export function AuctionsDashboard() {
       <Card>
         <div className="toolbar">
           <div className="field-group search-field"><FieldLabel htmlFor="auction-search">Suche</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="auction-search" value={query} onChange={(event) => updateFilters({ query: event.target.value })} placeholder="Itemname oder Material" /></div></div>
-          <div className="field-group"><FieldLabel htmlFor="auction-category">Kategorie</FieldLabel><Select id="auction-category" value={category} onChange={(event) => updateFilters({ category: event.target.value })}><option value="">Alle Kategorien</option>{(categories.data?.data ?? []).map((item) => <option key={item.name} value={item.name}>{item.displayName}</option>)}</Select></div>
+          <div className="field-group auction-category-filter"><FieldLabel htmlFor="auction-category">Kategorie</FieldLabel><div className="field-with-icon"><Layers3 size={16} /><Select id="auction-category" className="auction-category-select" value={category} onChange={(event) => updateFilters({ category: event.target.value })}><option value="">Alle Kategorien</option>{category && !categoryNames.has(category) ? <option value={category}>{formatMaterialName(category)}</option> : null}{categoryNavigation.standalone.length ? <optgroup label="Weitere Kategorien">{categoryNavigation.standalone.map((item) => <option key={item.name} value={item.name}>{item.displayName}</option>)}</optgroup> : null}{categoryNavigation.groups.map((group) => <optgroup key={group.parent.name} label={group.parent.displayName}><option value={group.parent.name}>{group.parent.displayName} (alle)</option>{group.children.map((item) => <option key={item.name} value={item.name}>{item.displayName}</option>)}</optgroup>)}</Select></div></div>
           <div className="field-group price-filter"><FieldLabel htmlFor="auction-min">Mindestpreis ($)</FieldLabel><Input id="auction-min" inputMode="decimal" value={minimum} onChange={(event) => updateFilters({ minimum: event.target.value })} placeholder="0" /></div>
           <div className="field-group price-filter"><FieldLabel htmlFor="auction-max">Höchstpreis ($)</FieldLabel><Input id="auction-max" inputMode="decimal" value={maximum} onChange={(event) => updateFilters({ maximum: event.target.value })} placeholder="Unbegrenzt" /></div>
           <label className="check-field"><input type="checkbox" checked={soon} onChange={(event) => updateFilters({ soon: event.target.checked })} /> Endet in 15 Min.</label>
