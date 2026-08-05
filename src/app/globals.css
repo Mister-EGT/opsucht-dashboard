@@ -273,6 +273,8 @@ select.field { cursor: pointer; }
 .auction-player-copy small { margin-top: 3px; color: var(--text-muted); font-size: 10px; }
 .dialog-section { margin-top: 21px; }
 .dialog-section > h3 { margin: 0 0 10px; font-size: 12px; }
+.auction-bid-chart { height: 260px; padding: 4px 0 0; }
+.auction-bid-chart-note { margin: -3px 0 8px; color: var(--text-muted); font-size: 10px; line-height: 1.5; }
 .lore-list { margin: 0; padding: 12px 12px 12px 28px; border: 1px solid var(--border); border-radius: 8px; background: var(--panel-soft); color: var(--text-muted); font-size: 12px; }
 .lore-list li + li { margin-top: 4px; }
 .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
@@ -514,6 +516,8 @@ select.field { cursor: pointer; }
   .auction-card, .auction-dialog-hero > div { min-width: 0; }
   .auction-dialog-hero h3, .auction-dialog-hero p, .lore-list { overflow-wrap: anywhere; }
   .auction-player-grid { grid-template-columns: 1fr; }
+  .auction-bid-chart { height: 230px; }
+  .auction-bid-chart-note { overflow-wrap: anywhere; }
   .dialog-footer-actions { flex-direction: column; }
   .dialog-footer-actions .button { width: 100%; }
   .dialog { width: calc(100vw - 20px); max-width: calc(100vw - 20px); max-height: calc(100dvh - 20px); }

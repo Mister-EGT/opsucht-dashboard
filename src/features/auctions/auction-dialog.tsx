@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { Check, Clipboard, Heart, UserRound } from "lucide-react";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { type ReactNode, useState } from "react";
 import { useFavorites } from "@/components/favorites-provider";
 import { ItemIcon } from "@/components/item-icon";
@@ -9,7 +10,8 @@ import { PriceValue } from "@/components/price-value";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog } from "@/components/ui/dialog";
-import { formatDateTime, formatMaterialName } from "@/lib/format";
+import { buildAuctionBidPriceHistory, type AuctionBidPricePoint } from "@/lib/auction";
+import { formatDateTime, formatExactPrice, formatMaterialName, formatPrice } from "@/lib/format";
 import { minecraftAvatarUrl, type MinecraftPlayerProfile } from "@/lib/minecraft-player";
 import type { Auction } from "@/lib/schemas";
 import { copyToClipboard } from "@/lib/utils";
@@ -23,6 +25,8 @@ export function AuctionDialog({ auction, open, onClose, categoryName, now }: { a
   if (!auction) return null;
   const name = auction.item.displayName ?? formatMaterialName(auction.item.material);
   const expired = new Date(auction.endTime).getTime() <= now;
+  const bidCount = Object.keys(auction.bids).length;
+  const bidPriceHistory = buildAuctionBidPriceHistory(auction.startBid, auction.bids);
 
   const copyMaterial = async () => {
     if (await copyToClipboard(auction.item.material)) {
@@ -41,10 +45,43 @@ export function AuctionDialog({ auction, open, onClose, categoryName, now }: { a
         <Detail label="Aktuelles Gebot" value={<PriceValue value={auction.currentBid} />} />
         <Detail label="Startgebot" value={<PriceValue value={auction.startBid} />} />
         <Detail label="Sofortkauf" value={<PriceValue value={auction.instantBuyPrice} />} />
-        <Detail label="Gebote" value={String(Object.keys(auction.bids).length)} />
+        <Detail label="Gebote" value={String(bidCount)} />
         <Detail label="Start" value={formatDateTime(auction.startTime)} />
         <Detail label="Ende" value={formatDateTime(auction.endTime)} />
       </dl>
+      {bidCount > 1 ? (
+        <div className="dialog-section">
+          <h3>Preisverlauf</h3>
+          <p className="auction-bid-chart-note">Startgebot und {bidCount} nach Betrag sortierte Gebote. Die OPSUCHT-API liefert keine Gebotszeitstempel.</p>
+          <div
+            className="chart-container auction-bid-chart"
+            role="img"
+            aria-label={`Preisverlauf mit ${bidCount} Geboten vom Startgebot ${formatExactPrice(auction.startBid)} bis ${formatExactPrice(auction.currentBid)}.`}
+          >
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={bidPriceHistory} margin={{ top: 12, right: 16, bottom: 2, left: 4 }}>
+                <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
+                <XAxis
+                  dataKey="step"
+                  stroke="var(--text-muted)"
+                  fontSize={10}
+                  minTickGap={24}
+                  tickFormatter={(value) => Number(value) === 0 ? "Start" : String(value)}
+                />
+                <YAxis
+                  width={64}
+                  domain={["auto", "auto"]}
+                  stroke="var(--text-muted)"
+                  fontSize={10}
+                  tickFormatter={(value) => formatPrice(Number(value))}
+                />
+                <Tooltip content={<AuctionBidTooltip />} />
+                <Line type="monotone" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={bidPriceHistory.length < 20} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ) : null}
       <div className="dialog-section">
         <h3>Beteiligte Spieler</h3>
         <div className="auction-player-grid">
@@ -80,6 +117,12 @@ export function AuctionDialog({ auction, open, onClose, categoryName, now }: { a
       </div>
     </Dialog>
   );
+}
+
+function AuctionBidTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: AuctionBidPricePoint }> }) {
+  const point = payload?.[0]?.payload;
+  if (!active || !point) return null;
+  return <div className="chart-tooltip"><strong>{point.label}</strong><span>{formatExactPrice(point.price)}</span></div>;
 }
 
 function PlayerIdentity({
