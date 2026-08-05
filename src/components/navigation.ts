@@ -22,7 +22,7 @@ export const navigationItems: NavigationItem[] = [
   { href: "/", label: "Übersicht", description: "Kennzahlen und Marktimpulse", icon: LayoutDashboard },
   { href: "/auctions", label: "Auktionshaus", shortLabel: "Auktionen", description: "Aktive Auktionen analysieren", icon: Gavel },
   { href: "/market", label: "Markt", description: "Preise, Aufträge und Spreads", icon: Store },
-  { href: "/merchant", label: "Händler", description: "OPShards und Wechselkurse", icon: CircleDollarSign },
+  { href: "/merchant", label: "Händler", description: "OPShards, Redcoins und Wechselkurse", icon: CircleDollarSign },
   { href: "/calculator", label: "Vergleichsrechner", shortLabel: "Rechner", description: "Portfolios und Werte vergleichen", icon: Calculator },
   { href: "/favorites", label: "Favoriten", description: "Gespeicherte Items und Auktionen", icon: Heart },
   { href: "/status", label: "API-Status", shortLabel: "Status", description: "Erreichbarkeit und Cache-Zustand", icon: Activity },

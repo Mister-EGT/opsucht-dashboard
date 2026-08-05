@@ -1,4 +1,4 @@
-import type { MerchantRate } from "@/lib/schemas";
+import type { MerchantCurrency, MerchantRate } from "@/lib/schemas";
 import type { ParsedMerchantRate } from "@/lib/types";
 import { formatMaterialName } from "@/lib/format";
 
@@ -10,6 +10,15 @@ const merchantCustomIcons: Record<string, string> = {
   "Holzbündel": "https://i.postimg.cc/yY9zJS0W/holz-gemisch.png",
   "Steinplatten": "https://i.postimg.cc/6603DM29/Unbenannt.png",
 };
+
+const merchantCurrencyLabels: Record<MerchantCurrency, string> = {
+  opshards: "OPShards",
+  redcoins: "Redcoins",
+};
+
+export function merchantCurrencyLabel(currency: MerchantCurrency): string {
+  return merchantCurrencyLabels[currency];
+}
 
 export function resolveMerchantItemIcon(material: string, customName: string | null): string {
   if (customName && merchantCustomIcons[customName]) return merchantCustomIcons[customName];
@@ -65,7 +74,7 @@ export function normalizeMerchantRates(rates: MerchantRate[]): ParsedMerchantRat
   });
 }
 
-export function calculateShardValue(quantity: number, exchangeRate: number): number {
+export function calculateMerchantValue(quantity: number, exchangeRate: number): number {
   if (!Number.isFinite(quantity) || !Number.isFinite(exchangeRate) || quantity < 0 || exchangeRate < 0) return 0;
   return quantity * exchangeRate;
 }
@@ -76,13 +85,13 @@ export function normalizeWholeItemQuantity(value: number | string): number {
   return Math.min(Number.MAX_SAFE_INTEGER, Math.floor(numeric));
 }
 
-export function calculateRequiredItems(shards: number, exchangeRate: number): {
+export function calculateRequiredItems(value: number, exchangeRate: number): {
   exact: number | null;
   wholeItems: number | null;
 } {
-  if (!Number.isFinite(shards) || !Number.isFinite(exchangeRate) || shards < 0 || exchangeRate <= 0) {
+  if (!Number.isFinite(value) || !Number.isFinite(exchangeRate) || value < 0 || exchangeRate <= 0) {
     return { exact: null, wholeItems: null };
   }
-  const exact = shards / exchangeRate;
+  const exact = value / exchangeRate;
   return { exact, wholeItems: Math.ceil(exact) };
 }

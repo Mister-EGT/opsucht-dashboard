@@ -56,12 +56,19 @@ describe("OPSUCHT-Zod-Parser", () => {
     expect(parsed.MONTHLY).toEqual([]);
   });
 
-  it("parst einfache und komplexe Händlerquellen", () => {
+  it("parst OPShards und Redcoins aus einfachen und komplexen Händlerquellen", () => {
     const parsed = parseMerchantRates([
       { source: "diamond_block", target: "opshards", base: 12, exchangeRate: 13.17 },
       { source: "minecraft:paper[custom_name={text: \"Holzbündel\"},custom_model_data={floats: [625.0f]}]", target: "opshards", base: 21, exchangeRate: 21.68 },
+      { source: "bone_block", target: "redcoins", base: 1, exchangeRate: 1 },
     ]);
-    expect(parsed).toHaveLength(2);
+    expect(parsed.map((rate) => rate.target)).toEqual(["opshards", "opshards", "redcoins"]);
+  });
+
+  it("weist unbekannte Händlerwährungen zurück", () => {
+    expect(() => parseMerchantRates([
+      { source: "diamond_block", target: "diamonds", base: 12, exchangeRate: 13.17 },
+    ])).toThrow();
   });
 
   it("toleriert fehlende optionale Darstellungsfelder in Kategorien", () => {

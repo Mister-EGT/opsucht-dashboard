@@ -15,7 +15,7 @@ import { EmptyState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { useAuctions, useMarketItems, useMarketPrices, useMerchantRates } from "@/hooks/use-opsucht";
 import { formatEconomyValue, formatMaterialName, formatRelativeTime } from "@/lib/format";
 import { flattenMarketPrices } from "@/lib/market";
-import { normalizeMerchantRates } from "@/lib/merchant";
+import { merchantCurrencyLabel, normalizeMerchantRates } from "@/lib/merchant";
 import { normalizeMaterialKey } from "@/lib/material";
 
 export function FavoritesDashboard() {
@@ -77,7 +77,7 @@ export function FavoritesDashboard() {
                 <article className="favorite-row" key={id}>
                   <ItemIcon src={rate?.icon} name={rate?.displayName ?? formatMaterialName(id)} size={41} />
                   <div className="favorite-main"><Link href={`/merchant?q=${encodeURIComponent(rate?.displayName ?? id)}`}><strong>{rate?.displayName ?? formatMaterialName(id)}</strong></Link><small>{rate ? rate.materialKey : `${id} · Aktuell nicht im Händlerfeed`}</small></div>
-                  <div className="favorite-value"><strong>{rate ? `${formatEconomyValue(rate.exchangeRate)} OPShards` : "Nicht verfügbar"}</strong><small>Wechselkurs</small></div>
+                  <div className="favorite-value"><strong>{rate ? `${formatEconomyValue(rate.exchangeRate)} ${merchantCurrencyLabel(rate.target)}` : "Nicht verfügbar"}</strong><small>Wechselkurs</small></div>
                   <Button variant="ghost" size="icon" onClick={() => favorites.toggleMerchant(id)} aria-label="Händleritem entfernen"><Trash2 size={16} /></Button>
                 </article>
               )) : <CompactEmpty text="Keine Händleritems gespeichert." />}

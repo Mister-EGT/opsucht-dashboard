@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: "OPSUCHT Wirtschaft | Community-Dashboard",
     template: "%s | OPSUCHT Wirtschaft",
   },
-  description: "Inoffizielles Wirtschafts- und Analyse-Dashboard für Auktionen, Marktpreise und OPShards auf OPSUCHT.",
+  description: "Inoffizielles Wirtschafts- und Analyse-Dashboard für Auktionen, Marktpreise, OPShards und Redcoins auf OPSUCHT.",
   applicationName: "OPSUCHT Wirtschaft",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/icon.svg" },
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "de_DE",
     title: "OPSUCHT Wirtschaft",
-    description: "Auktionen, Marktpreise und OPShards mit öffentlichen OPSUCHT-Daten analysieren.",
+    description: "Auktionen, Marktpreise, OPShards und Redcoins mit öffentlichen OPSUCHT-Daten analysieren.",
   },
   robots: { index: true, follow: true },
 };

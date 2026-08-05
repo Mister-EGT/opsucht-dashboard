@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { calculateRequiredItems, calculateShardValue, normalizeMerchantRates, normalizeWholeItemQuantity, parseMerchantSource, resolveMerchantItemIcon } from "@/lib/merchant";
+import { calculateMerchantValue, calculateRequiredItems, merchantCurrencyLabel, normalizeMerchantRates, normalizeWholeItemQuantity, parseMerchantSource, resolveMerchantItemIcon } from "@/lib/merchant";
 
 const customSource = 'minecraft:paper[custom_name={extra: [{bold: 1b, color: "#926428", text: "Holzbündel"}], text: ""},custom_model_data={floats: [625.0f]},item_name={text: "Holzbündel"}]';
 
-describe("Händlerparser und OPShards-Rechner", () => {
+describe("Händlerparser und Währungsrechner", () => {
   it("extrahiert Material, Anzeigename und Custom Model Data", () => {
     const parsed = parseMerchantSource(customSource);
     expect(parsed.material).toBe("paper");
@@ -31,6 +31,11 @@ describe("Händlerparser und OPShards-Rechner", () => {
     expect(rate?.deviationPercent).toBeCloseTo(10);
   });
 
+  it("benennt beide Händlerwährungen korrekt", () => {
+    expect(merchantCurrencyLabel("opshards")).toBe("OPShards");
+    expect(merchantCurrencyLabel("redcoins")).toBe("Redcoins");
+  });
+
   it("ordnet den beiden Standard-Händleritems die korrekten Minecraft-Icons zu", () => {
     expect(resolveMerchantItemIcon("diamond_block", null)).toBe("https://img.mc-api.io/diamond_block.png");
     expect(resolveMerchantItemIcon("netherite_ingot", null)).toBe("https://img.mc-api.io/netherite_ingot.png");
@@ -45,7 +50,7 @@ describe("Händlerparser und OPShards-Rechner", () => {
   });
 
   it("rundet benötigte Minecraft-Items immer auf ganze Stück auf", () => {
-    expect(calculateShardValue(64, 13.17)).toBeCloseTo(842.88);
+    expect(calculateMerchantValue(64, 13.17)).toBeCloseTo(842.88);
     const required = calculateRequiredItems(1000, 13.17);
     expect(required.exact).toBeCloseTo(75.9301, 3);
     expect(required.wholeItems).toBe(76);

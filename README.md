@@ -12,7 +12,7 @@ Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 - Auktionshaus mit Suche, Kategorien, Preisfiltern, Echtzeit-Countdown, Tabellen- und Kartenansicht, URL-Filtern, Detaildialog sowie aufgelösten Namen und Köpfen für Verkäufer und Höchstbietende
 - Marktübersicht mit der vollständigen aktuell erfassten Itemliste, Kategorien, BUY- und SELL-Kursen, Auftragsbeständen, Spreads und mobilen Karten
 - Item-Detailseiten mit vier Zeiträumen, einem zwischen Kauf- und Verkaufskurs umschaltbaren Diagramm, exakten Tooltips und Zeitraumstatistiken
-- Händlerseite mit Parser für Minecraft-Komponentenstrings, Custom-Namen, Custom Model Data und OPShards-Rechner
+- Händlerseite mit Parser für Minecraft-Komponentenstrings, Custom-Namen, Custom Model Data und Rechner für OPShards sowie Redcoins
 - Vergleichsrechner für mehrere Positionen mit Markt- und Händlerwerten, lokaler Speicherung sowie JSON- und CSV-Export
 - Lokale Favoriten für Marktitems, Händleritems und Auktions-Snapshots
 - API-Statusseite mit HTTP-Zustand, Antwortzeit, Cache-Quelle, Datenalter und Fehlerzeitpunkten
@@ -193,9 +193,9 @@ Der relative Spread verwendet den niedrigeren Kurs als Basis:
 
 Ein Prozentwert wird nur ausgegeben, wenn beide Kurse vorhanden sind und die Basis größer als null ist.
 
-### OPShards
+### Händlerwährungen
 
-Die Vorwärtsrechnung multipliziert eine ganze Itemmenge mit `exchangeRate`. Bei der Rückwärtsrechnung wird der exakte mathematische Wert zusätzlich angezeigt, während das reguläre Minecraft-Ergebnis mit `Math.ceil` auf ganze Items aufgerundet wird. Die öffentliche API dokumentiert keine weitere serverseitige Rundungsregel.
+Die Vorwärtsrechnung multipliziert eine ganze Itemmenge mit `exchangeRate`. Die jeweilige `target`-Währung wird dabei als OPShards oder Redcoins ausgewiesen. Bei der Rückwärtsrechnung wird der exakte mathematische Wert zusätzlich angezeigt, während das reguläre Minecraft-Ergebnis mit `Math.ceil` auf ganze Items aufgerundet wird. Im Vergleichsrechner bleiben beide Währungen in getrennten Summen. Die öffentliche API dokumentiert keine weitere serverseitige Rundungsregel.
 
 ### Marktbewegungen
 
