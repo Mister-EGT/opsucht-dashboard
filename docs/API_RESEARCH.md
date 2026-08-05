@@ -1,6 +1,6 @@
 # OPSUCHT-API: Live-Untersuchung
 
-Stand: 20. Juli 2026, Europe/Berlin
+Stand der Grundprüfung: 20. Juli 2026, Europe/Berlin. Händlerkurse zuletzt am 5. August 2026 aktualisiert.
 
 Diese Datei dokumentiert eine begrenzte, nicht aggressive Prüfung der vom Auftrag vorgegebenen öffentlichen Endpunkte. Die Zahlen sind Momentaufnahmen und können sich jederzeit ändern.
 
@@ -136,7 +136,7 @@ Für `ACACIA_LEAVES` wurden 69 stündliche, 181 tägliche, 58 wöchentliche und 
 
 ## Händlerkurse
 
-Die Live-Antwort enthielt zwei einfache Materialien und drei komplexe Custom-Items:
+Die erneute Live-Prüfung am 5. August 2026 ergab zehn Kurse mit zwei Zielwährungen. Fünf Kurse verwenden `target: "opshards"`, fünf weitere `target: "redcoins"`. Die OPShards-Kurse enthalten zwei einfache Materialien und drei komplexe Custom-Items:
 
 - `diamond_block`
 - `netherite_ingot`
@@ -144,13 +144,21 @@ Die Live-Antwort enthielt zwei einfache Materialien und drei komplexe Custom-Ite
 - Papier-Komponenten für `Holzbündel`, Custom Model Data 625
 - Papier-Komponenten für `Steinplatten`, Custom Model Data 635
 
+Die Redcoins-Kurse verwenden aktuell folgende einfache Materialien:
+
+- `bone_block`
+- `book`
+- `glistering_melon_slice`
+- `ghast_tear`
+- `pumpkin_pie`
+
 Das moderne Komponentenformat war:
 
 ```text
 minecraft:paper[custom_name={...},custom_model_data={floats: [626.0f]},item_name={...}]
 ```
 
-Der Parser unterstützt zusätzlich die ältere Form `custom_model_data=626`, entfernt den Namespace nur für die normalisierte Ansicht und bewahrt `source` unverändert für technische Details.
+Der Parser unterstützt zusätzlich die ältere Form `custom_model_data=626`, entfernt den Namespace nur für die normalisierte Ansicht und bewahrt `source` unverändert für technische Details. Das Feld `target` wird als eine der beiden bekannten Währungen `opshards` oder `redcoins` validiert.
 
 ## Fehlerverhalten
 

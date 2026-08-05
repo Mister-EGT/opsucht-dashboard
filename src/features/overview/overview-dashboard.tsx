@@ -54,6 +54,10 @@ export function OverviewDashboard() {
     .sort((a, b) => (a.buyPrice ?? 0) - (b.buyPrice ?? 0))
     .slice(0, 4);
   const favoriteRows = marketRows.filter((row) => favorites.market.includes(row.material)).slice(0, 5);
+  const merchantRateCounts = (merchants.data?.data ?? []).reduce((counts, rate) => ({
+    ...counts,
+    [rate.target]: counts[rate.target] + 1,
+  }), { opshards: 0, redcoins: 0 });
 
   if (loading) return <><PageHeader eyebrow="Live-Wirtschaft" title="Wirtschaft im Überblick" description="Die wichtigsten Markt-, Auktions- und Händlerdaten in einer gemeinsamen Analyseansicht." /><PageSkeleton cards={4} /></>;
   if (allFailed) return <><PageHeader eyebrow="Live-Wirtschaft" title="Wirtschaft im Überblick" description="Die wichtigsten Markt-, Auktions- und Händlerdaten in einer gemeinsamen Analyseansicht." /><ErrorState onRetry={() => { auctions.refetch(); prices.refetch(); items.refetch(); categories.refetch(); merchants.refetch(); }} /></>;
@@ -84,7 +88,7 @@ export function OverviewDashboard() {
       <div className="stat-grid">
         <MetricCard label="Laufende Auktionen" value={formatEconomyValue(activeAuctions.length)} note={`${formatEconomyValue(endingSoon.length)} enden in 15 Minuten`} icon={Gavel} />
         <MetricCard label="Erfasste Marktitems" value={formatEconomyValue(marketRows.length || items.data?.data.length)} note={`${formatEconomyValue(categories.data?.data.length)} Kategorien verfügbar`} icon={Store} color="#0ea5a4" />
-        <MetricCard label="Händlerkurse" value={formatEconomyValue(merchants.data?.data.length)} note="Aktuelle Umrechnung in OPShards" icon={CircleDollarSign} color="#8b5cf6" />
+        <MetricCard label="Händlerkurse" value={formatEconomyValue(merchants.data?.data.length)} note={`${merchantRateCounts.opshards} OPShards · ${merchantRateCounts.redcoins} Redcoins`} icon={CircleDollarSign} color="#8b5cf6" />
         <MetricCard label="API-Bereiche" value={health.data ? `${health.data.healthy}/${health.data.total}` : "Wird geprüft"} note={lastUpdated ? `Stand ${formatDateTime(lastUpdated)}` : "Noch keine Aktualisierung"} icon={Activity} color="#f59e0b" />
       </div>
 

@@ -11,13 +11,14 @@ describe("Vergleichsrechner", () => {
 
   it("berechnet die Differenz nur aus tatsächlich vergleichbaren Positionen", () => {
     const totals = calculateCalculatorTotals([
-      { marketBuy: 100, marketSell: 80, merchantValue: null },
-      { marketBuy: 50, marketSell: null, merchantValue: 12 },
-      { marketBuy: null, marketSell: null, merchantValue: null },
+      { marketBuy: 100, marketSell: 80, merchantValue: null, merchantCurrency: null },
+      { marketBuy: 50, marketSell: null, merchantValue: 12, merchantCurrency: "opshards" },
+      { marketBuy: null, marketSell: null, merchantValue: 2, merchantCurrency: "redcoins" },
     ]);
     expect(totals.marketBuy).toBe(150);
     expect(totals.comparableDifference).toBe(20);
     expect(totals.comparableCount).toBe(1);
-    expect(totals.availableMerchant).toBe(1);
+    expect(totals.merchant).toEqual({ opshards: 12, redcoins: 2 });
+    expect(totals.availableMerchant).toEqual({ opshards: 1, redcoins: 1 });
   });
 });

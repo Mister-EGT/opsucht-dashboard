@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/form";
 import { ItemIcon } from "@/components/item-icon";
 import { useAuctions, useMarketItems, useMarketPrices, useMerchantRates } from "@/hooks/use-opsucht";
 import { flattenMarketPrices } from "@/lib/market";
-import { normalizeMerchantRates } from "@/lib/merchant";
+import { merchantCurrencyLabel, normalizeMerchantRates } from "@/lib/merchant";
 import { PriceValue } from "@/components/price-value";
 import { formatEconomyValue, formatMaterialName } from "@/lib/format";
 import { useRecentMarketItems } from "@/hooks/use-recent-market-items";
@@ -46,7 +46,7 @@ export function GlobalSearch() {
     const marketRows = prices.data ? flattenMarketPrices(prices.data.data, items.data?.data ?? []) : [];
     return {
       market: marketRows.filter((item) => `${item.name} ${item.material} ${item.category}`.toLocaleLowerCase("de-DE").includes(normalized)).slice(0, 6),
-      merchant: normalizeMerchantRates(merchants.data?.data ?? []).filter((item) => `${item.displayName} ${item.materialKey}`.toLocaleLowerCase("de-DE").includes(normalized)).slice(0, 5),
+      merchant: normalizeMerchantRates(merchants.data?.data ?? []).filter((item) => `${item.displayName} ${item.materialKey} ${item.target} ${merchantCurrencyLabel(item.target)}`.toLocaleLowerCase("de-DE").includes(normalized)).slice(0, 5),
       auctions: (auctions.data?.data ?? []).filter((auction) => `${auction.item.displayName ?? ""} ${auction.item.material}`.toLocaleLowerCase("de-DE").includes(normalized)).slice(0, 6),
     };
   }, [normalized, prices.data, items.data, merchants.data, auctions.data]);
@@ -101,7 +101,7 @@ export function GlobalSearch() {
             {results.merchant.length ? <SearchGroup title="Händler" icon={Tag}>{results.merchant.map((item) => (
               <Link key={item.id} href={`/merchant?q=${encodeURIComponent(item.displayName)}`} onClick={close} className="search-result">
                 <ItemIcon src={item.icon} name={item.displayName} size={34} />
-                <span><strong>{item.displayName}</strong><small>{item.materialKey} · {formatEconomyValue(item.exchangeRate)} OPShards</small></span>
+                <span><strong>{item.displayName}</strong><small>{item.materialKey} · {formatEconomyValue(item.exchangeRate)} {merchantCurrencyLabel(item.target)}</small></span>
               </Link>
             ))}</SearchGroup> : null}
             {results.auctions.length ? <SearchGroup title="Auktionen" icon={Gavel}>{results.auctions.map((auction) => {

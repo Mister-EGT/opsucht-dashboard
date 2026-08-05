@@ -1,6 +1,6 @@
 "use client";
 
-import { CopyPlus, Download, Plus, Save, Scale, ShoppingBasket, Trash2, WalletCards } from "lucide-react";
+import { CircleDollarSign, CopyPlus, Download, Plus, Save, Scale, ShoppingBasket, Trash2, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { DataFreshness } from "@/components/data-freshness";
 import { ItemIcon } from "@/components/item-icon";
@@ -16,7 +16,8 @@ import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/
 import { useMarketItems, useMarketPrices, useMerchantRates } from "@/hooks/use-opsucht";
 import { formatEconomyValue, formatExactPrice, formatMaterialName, formatPrice } from "@/lib/format";
 import { flattenMarketPrices } from "@/lib/market";
-import { normalizeMerchantRates, normalizeWholeItemQuantity } from "@/lib/merchant";
+import { merchantCurrencyLabel, normalizeMerchantRates, normalizeWholeItemQuantity } from "@/lib/merchant";
+import type { MerchantCurrency } from "@/lib/schemas";
 import type { CalculatorPosition } from "@/lib/types";
 import { createId, downloadTextFile, escapeCsv } from "@/lib/utils";
 import { buildCalculatorOptions, calculateCalculatorTotals } from "@/lib/calculator";
@@ -81,6 +82,7 @@ export function ComparisonCalculator() {
       marketBuy: market?.buyPrice === null || market?.buyPrice === undefined ? null : market.buyPrice * quantity,
       marketSell: market?.sellPrice === null || market?.sellPrice === undefined ? null : market.sellPrice * quantity,
       merchantValue: merchant ? merchant.exchangeRate * quantity : null,
+      merchantCurrency: merchant?.target ?? null,
       market,
       merchant,
     };
@@ -89,7 +91,6 @@ export function ComparisonCalculator() {
   const totals = calculateCalculatorTotals(calculated);
   const missingBuy = calculated.length - totals.availableBuy;
   const missingSell = calculated.length - totals.availableSell;
-  const missingMerchant = calculated.length - totals.availableMerchant;
 
   const addPosition = () => {
     const first = options[0];
@@ -105,12 +106,12 @@ export function ComparisonCalculator() {
   });
 
   const exportJson = () => {
-    downloadTextFile("opsucht-vergleich.json", JSON.stringify({ exportedAt: new Date().toISOString(), positions: calculated.map(({ id, material, quantity, name, marketBuy, marketSell, merchantValue }) => ({ id, material, name, quantity, marketBuy, marketSell, merchantValue })), totals }, null, 2), "application/json;charset=utf-8");
+    downloadTextFile("opsucht-vergleich.json", JSON.stringify({ exportedAt: new Date().toISOString(), positions: calculated.map(({ id, material, quantity, name, marketBuy, marketSell, merchantValue, merchantCurrency }) => ({ id, material, name, quantity, marketBuy, marketSell, merchantValue, merchantCurrency })), totals }, null, 2), "application/json;charset=utf-8");
     notify("Vergleich als JSON exportiert.");
   };
   const exportCsv = () => {
-    const header = ["Material", "Name", "Menge", "Markt-Kaufwert", "Markt-Verkaufswert", "Händlerwert OPShards"];
-    const lines = calculated.map((item) => [item.material, item.name, item.quantity, item.marketBuy, item.marketSell, item.merchantValue].map((value) => escapeCsv(value)).join(","));
+    const header = ["Material", "Name", "Menge", "Markt-Kaufwert", "Markt-Verkaufswert", "Händlerwert", "Händlerwährung"];
+    const lines = calculated.map((item) => [item.material, item.name, item.quantity, item.marketBuy, item.marketSell, item.merchantValue, item.merchantCurrency ? merchantCurrencyLabel(item.merchantCurrency) : null].map((value) => escapeCsv(value)).join(","));
     downloadTextFile("opsucht-vergleich.csv", [header.join(","), ...lines].join("\n"), "text/csv;charset=utf-8");
     notify("Vergleich als CSV exportiert.");
   };
@@ -122,13 +123,14 @@ export function ComparisonCalculator() {
     .filter((area): area is string => area !== null);
   return (
     <>
-      <PageHeader eyebrow="Portfolio" title="Vergleichsrechner" description="Itemmengen kombinieren und Kauf-, Verkaufs- sowie OPShards-Werte ausschließlich mit aktuellen API-Daten vergleichen." actions={<><DataFreshness meta={prices.data?.meta ?? merchants.data?.meta} fetching={prices.isFetching || merchants.isFetching} /><Button onClick={addPosition} variant="primary" disabled={!options.length}><Plus size={16} /> Position</Button></>} />
+      <PageHeader eyebrow="Portfolio" title="Vergleichsrechner" description="Itemmengen kombinieren und Kauf-, Verkaufs- sowie OPShards- und Redcoins-Werte ausschließlich mit aktuellen API-Daten vergleichen." actions={<><DataFreshness meta={prices.data?.meta ?? merchants.data?.meta} fetching={prices.isFetching || merchants.isFetching} /><Button onClick={addPosition} variant="primary" disabled={!options.length}><Plus size={16} /> Position</Button></>} />
       {(prices.data?.meta.stale || merchants.data?.meta.stale) ? <StaleBanner message={prices.data?.meta.error ?? merchants.data?.meta.error} /> : null}
       {unavailableAreas.length ? <StaleBanner message={`Einige Berechnungsgrundlagen sind vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Fehlende Werte werden weiterhin ausdrücklich markiert.`} /> : null}
       <div className="stat-grid">
         <MetricCard label="Markt-Kaufwert" value={totals.availableBuy ? formatPrice(totals.marketBuy) : "Nicht verfügbar"} note={missingBuy ? `${missingBuy} Positionen ohne BUY-Kurs` : "Alle Positionen eingerechnet"} icon={ShoppingBasket} title={totals.availableBuy ? `Exakter Preis: ${formatExactPrice(totals.marketBuy)}` : undefined} />
         <MetricCard label="Markt-Verkaufswert" value={totals.availableSell ? formatPrice(totals.marketSell) : "Nicht verfügbar"} note={missingSell ? `${missingSell} Positionen ohne SELL-Kurs` : "Alle Positionen eingerechnet"} icon={WalletCards} color="#0ea5a4" title={totals.availableSell ? `Exakter Preis: ${formatExactPrice(totals.marketSell)}` : undefined} />
-        <MetricCard label="Händlerwert" value={totals.availableMerchant ? `${formatEconomyValue(totals.merchant)} OPShards` : "Nicht verfügbar"} note={missingMerchant ? `${missingMerchant} Positionen ohne Händlerkurs` : "Alle Positionen eingerechnet"} icon={Save} color="#8b5cf6" />
+        <MetricCard label="Händlerwert OPShards" value={totals.availableMerchant.opshards ? `${formatEconomyValue(totals.merchant.opshards)} OPShards` : "Nicht verfügbar"} note={`${totals.availableMerchant.opshards} Positionen eingerechnet`} icon={Save} color="#8b5cf6" />
+        <MetricCard label="Händlerwert Redcoins" value={totals.availableMerchant.redcoins ? `${formatEconomyValue(totals.merchant.redcoins)} Redcoins` : "Nicht verfügbar"} note={`${totals.availableMerchant.redcoins} Positionen eingerechnet`} icon={CircleDollarSign} color="#ef4444" />
         <MetricCard label="BUY minus SELL" value={totals.comparableCount ? formatPrice(totals.comparableDifference) : "Nicht verfügbar"} note={`${totals.comparableCount} von ${calculated.length} Positionen direkt vergleichbar`} icon={Scale} color="#f59e0b" title={totals.comparableCount ? `Exakter Betrag: ${formatExactPrice(totals.comparableDifference)}` : undefined} />
       </div>
 
@@ -140,7 +142,7 @@ export function ComparisonCalculator() {
             <div className="field-group position-quantity"><FieldLabel htmlFor={`quantity-${position.id}`}>Ganze Menge</FieldLabel><Input id={`quantity-${position.id}`} type="number" min="0" max={Number.MAX_SAFE_INTEGER} step="1" value={position.quantity} onChange={(event) => updatePosition(position.id, { quantity: normalizeWholeItemQuantity(event.target.value) })} /></div>
             <PositionValue label="Markt-Kaufwert" value={position.marketBuy} currency="dollar" />
             <PositionValue label="Markt-Verkaufswert" value={position.marketSell} currency="dollar" />
-            <PositionValue label="Händlerwert" value={position.merchantValue} currency="shards" />
+            <PositionValue label="Händlerwert" value={position.merchantValue} currency={position.merchantCurrency} />
             <div className="position-difference"><span>BUY minus SELL</span><strong>{position.marketBuy === null || position.marketSell === null ? "Nicht berechenbar" : <PriceValue value={position.marketBuy - position.marketSell} />}</strong>{(position.marketBuy === null || position.marketSell === null || position.merchantValue === null) ? <Badge tone="warning">Preis fehlt</Badge> : null}</div>
             <div className="position-actions"><Button variant="ghost" size="icon" onClick={() => duplicatePosition(position)} aria-label={`${position.name} duplizieren`}><CopyPlus size={17} /></Button><Button variant="ghost" size="icon" onClick={() => removePosition(position.id)} aria-label={`${position.name} entfernen`}><Trash2 size={17} /></Button></div>
           </article>
@@ -152,6 +154,6 @@ export function ComparisonCalculator() {
   );
 }
 
-function PositionValue({ label, value, currency }: { label: string; value: number | null; currency: "dollar" | "shards" }) {
-  return <div className="position-value"><span>{label}</span><strong className={value === null ? "missing-value" : undefined}>{value === null ? "Preis fehlt" : currency === "dollar" ? <PriceValue value={value} /> : `${formatEconomyValue(value)} OPShards`}</strong></div>;
+function PositionValue({ label, value, currency }: { label: string; value: number | null; currency: "dollar" | MerchantCurrency | null }) {
+  return <div className="position-value"><span>{label}</span><strong className={value === null ? "missing-value" : undefined}>{value === null ? "Preis fehlt" : currency === "dollar" ? <PriceValue value={value} /> : currency ? `${formatEconomyValue(value)} ${merchantCurrencyLabel(currency)}` : "Währung fehlt"}</strong></div>;
 }

@@ -111,10 +111,12 @@ export const marketHistorySchema = z
   })
   .passthrough();
 
+export const merchantCurrencySchema = z.enum(["opshards", "redcoins"]);
+
 export const merchantRateSchema = z
   .object({
     source: z.string().min(1),
-    target: z.string().min(1),
+    target: merchantCurrencySchema,
     base: nonNegativeNumber,
     exchangeRate: nonNegativeNumber,
   })
@@ -131,6 +133,7 @@ export type MarketPriceResponse = z.infer<typeof marketPriceSchema>;
 export type MarketPricesResponse = z.infer<typeof marketPricesSchema>;
 export type HistoryPoint = z.infer<typeof historyPointSchema>;
 export type MarketHistoryResponse = z.infer<typeof marketHistorySchema>;
+export type MerchantCurrency = z.infer<typeof merchantCurrencySchema>;
 export type MerchantRate = z.infer<typeof merchantRateSchema>;
 
 export function parseAuctions(value: unknown): Auction[] {
