@@ -167,6 +167,10 @@ select.field { cursor: pointer; }
 .field-with-icon > svg { position: absolute; left: 11px; top: 50%; z-index: 1; transform: translateY(-50%); pointer-events: none; }
 .field-with-icon .field { padding-left: 35px; }
 .price-filter { max-width: 135px; }
+.auction-category-filter { min-width: 230px; }
+.auction-category-select { font-weight: 600; }
+.auction-category-select option { color: var(--text); font-weight: 500; }
+.auction-category-select optgroup { color: var(--text-muted); font-weight: 750; }
 .check-field { display: flex; align-items: center; gap: 8px; min-height: 41px; color: var(--text-muted); font-size: 12px; cursor: pointer; }
 .check-field input { width: 16px; height: 16px; accent-color: var(--accent); }
 
