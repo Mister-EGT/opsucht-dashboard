@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Menu, Plus, X } from "lucide-react";
+import { BarChart3, ChevronRight, Menu, Plus, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch } from "@/components/global-search";
 import { navigationItems, pageLabel } from "@/components/navigation";
@@ -10,6 +10,8 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ShareCurrentView } from "@/components/share-current-view";
 import { Button } from "@/components/ui/button";
 import { cn, safeDecodeURIComponent } from "@/lib/utils";
+
+const navigationGroups = ["Analyse", "Werkzeuge"] as const;
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/") return pathname === "/";
@@ -66,11 +68,19 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a href="#main-content" className="skip-link">Zum Hauptinhalt springen</a>
       <aside className="sidebar" aria-label="Hauptnavigation">
         <Link href="/" className="brand" aria-label="OPSUCHT Wirtschaft Startseite">
-          <span className="brand-mark">OW</span>
-          <span><strong>OPSUCHT</strong><small>Wirtschaft</small></span>
+          <span className="brand-mark"><BarChart3 size={20} aria-hidden="true" /></span>
+          <span className="brand-copy"><strong>OPSUCHT</strong><small>Wirtschaftsdaten</small></span>
+          <span className="brand-badge">Live</span>
         </Link>
         <nav className="sidebar-nav">
-          {navigationItems.map((item) => <NavigationLink key={item.href} item={item} active={isActive(pathname, item.href)} />)}
+          {navigationGroups.map((group) => (
+            <div className="nav-group" key={group}>
+              <p className="nav-group-label">{group}</p>
+              {navigationItems.filter((item) => item.group === group).map((item) => (
+                <NavigationLink key={item.href} item={item} active={isActive(pathname, item.href)} />
+              ))}
+            </div>
+          ))}
         </nav>
         <div className="sidebar-note">
           <span className="status-dot status-ok" />
@@ -126,8 +136,8 @@ function NavigationLink({ item, active, onClick }: { item: (typeof navigationIte
   const Icon = item.icon;
   return (
     <Link href={item.href} className={cn("nav-link", active && "active")} aria-current={active ? "page" : undefined} onClick={onClick}>
-      <Icon size={19} aria-hidden="true" />
-      <span>{item.label}</span>
+      <span className="nav-icon"><Icon size={18} aria-hidden="true" /></span>
+      <span className="nav-copy"><strong>{item.label}</strong><small>{item.description}</small></span>
     </Link>
   );
 }

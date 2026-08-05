@@ -33,6 +33,8 @@ Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 - date-fns
 - Vitest
 
+Das visuelle System ist an Figmas [Simple Design System](https://www.figma.com/community/file/1380235722331273046/simple-design-system) angelehnt. Verwendet werden dessen Prinzipien für Navigation, Karten, Formulare, Status-Tags, Abstände und Oberflächen in Hell und Dunkel. Das UI-Kit steht unter [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+
 Die Versionen sind in `package.json` exakt festgeschrieben und in `package-lock.json` reproduzierbar aufgelöst.
 
 ## Schnellstart
