@@ -9,7 +9,7 @@ export const auctionItemSchema = z
   .object({
     material: z.string().min(1),
     icon: z.string().url().nullable().optional(),
-    amount: z.number().int().positive(),
+    amount: nonNegativeInteger,
     displayName: z.string().nullable().optional(),
     lore: z.array(z.string()).optional().default([]),
     enchantments: z.record(z.string(), finiteNumber).optional().default({}),

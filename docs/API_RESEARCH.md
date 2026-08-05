@@ -70,6 +70,10 @@ interface LiveAuction {
 }
 ```
 
+Die API kann bei nicht auflösbaren Custom-Items vorübergehend `material: "unknown"`
+und `amount: 0` liefern. Das Dashboard bewahrt diese Upstream-Werte, statt wegen eines
+einzelnen Platzhalter-Items die gesamte Auktionsliste zu verwerfen.
+
 In der Momentaufnahme:
 
 - hatten 104 Einträge sowohl `highestBidder` als auch `instantBuyPrice`
