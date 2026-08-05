@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { auctionCategoriesSchema, marketCategoriesSchema, parseAuctions, parseMarketHistory, parseMarketPrices, parseMerchantRates } from "@/lib/schemas";
+import { auctionCategoriesSchema, auctionItemSchema, marketCategoriesSchema, parseAuctions, parseMarketHistory, parseMarketPrices, parseMerchantRates } from "@/lib/schemas";
 
 describe("OPSUCHT-Zod-Parser", () => {
   it("parst eine reale Auktionsform und toleriert zusätzliche Felder", () => {
@@ -33,6 +33,29 @@ describe("OPSUCHT-Zod-Parser", () => {
 
   it("weist eine Auktionsantwort ohne stabile UID zurück", () => {
     expect(() => parseAuctions([{ item: {}, category: "custom_items" }])).toThrow();
+  });
+
+  it("toleriert reale Platzhalter-Items mit unbekanntem Material und Menge 0", () => {
+    const parsed = parseAuctions([
+      {
+        uid: "182226916b044576fa8e4f35434bcda5",
+        seller: "fe8a060d-383d-4890-b01f-ae3802d1ef84",
+        item: { material: "unknown", amount: 0 },
+        category: "custom_items",
+        startBid: 5_000,
+        currentBid: 5_000,
+        bids: {},
+        startTime: "2026-08-05T16:17:06.063Z",
+        endTime: "2026-08-06T16:17:06.063Z",
+      },
+    ]);
+
+    expect(parsed[0]?.item).toMatchObject({ material: "unknown", amount: 0 });
+  });
+
+  it("weist negative oder gebrochene Itemmengen weiterhin zurück", () => {
+    expect(() => auctionItemSchema.parse({ material: "STONE", amount: -1 })).toThrow();
+    expect(() => auctionItemSchema.parse({ material: "STONE", amount: 1.5 })).toThrow();
   });
 
   it("parst Marktpreise unabhängig von der orderSide-Reihenfolge", () => {
