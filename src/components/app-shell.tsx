@@ -69,7 +69,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <aside className="sidebar" aria-label="Hauptnavigation">
         <Link href="/" className="brand" aria-label="OPSUCHT Wirtschaft Startseite">
           <span className="brand-mark"><BarChart3 size={20} aria-hidden="true" /></span>
-          <span className="brand-copy"><strong>OPSUCHT</strong><small>Wirtschaftsdaten</small></span>
+          <span className="brand-copy"><strong>OPSUCHT</strong><small>Datenwerkstatt</small></span>
           <span className="brand-badge">Live</span>
         </Link>
         <nav className="sidebar-nav">
