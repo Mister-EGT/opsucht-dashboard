@@ -965,7 +965,7 @@ body {
   text-transform: uppercase;
 }
 
-.sidebar-nav { gap: 18px; overflow-y: auto; scrollbar-color: var(--accent) transparent; scrollbar-width: thin; }
+.sidebar-nav { min-width: 0; gap: 18px; overflow-x: hidden; overflow-y: auto; scrollbar-color: var(--accent) transparent; scrollbar-width: thin; }
 .nav-group { display: grid; gap: 4px; }
 .nav-group-label {
   margin: 0;
