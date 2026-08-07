@@ -15,6 +15,8 @@ Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 - Händlerseite mit Parser für Minecraft-Komponentenstrings, Custom-Namen, Custom Model Data und Rechner für OPShards sowie Redcoins
 - Vergleichsrechner für mehrere Positionen mit Markt- und Händlerwerten, lokaler Speicherung sowie JSON- und CSV-Export
 - Lokale Favoriten für Marktitems, Händleritems und Auktions-Snapshots
+- Optionale Konten mit E-Mail-Anmeldung, Profil, Passwortwiederherstellung und geräteübergreifender Favoritensynchronisierung
+- Abgesicherte Administration mit Rollen, Kontostatus, globalen Cloud-Schaltern, Nutzungsübersicht und Audit-Protokoll
 - API-Statusseite mit HTTP-Zustand, Antwortzeit, Cache-Quelle, Datenalter und Fehlerzeitpunkten
 - Fest begrenzter, ausschließlich lesender API-Explorer mit formatiertem JSON und aufklappbarem Strukturbaum
 - Desktop-Sidebar, mobile Bottom-Navigation, globale Suche, Breadcrumbs, Light Mode, Dark Mode und Systemmodus
@@ -32,6 +34,7 @@ Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 - Lucide Icons
 - date-fns
 - Vitest
+- Supabase Auth und Postgres mit Row Level Security für optionale Kontofunktionen
 
 Die alternative Oberfläche orientiert sich an Strukturprinzipien des in Figma verfügbaren macOS 27 UI Kits und übersetzt sie in eine eigenständige Editorial-Terminal-Ästhetik für das Web. Es wurden keine Apple-Assets, Schriftdateien oder Markenelemente übernommen.
 
@@ -39,7 +42,7 @@ Die Versionen sind in `package.json` exakt festgeschrieben und in `package-lock.
 
 ## Schnellstart
 
-Voraussetzung ist Node.js 20.9 oder neuer.
+Voraussetzung ist Node.js 22 oder neuer.
 
 ```bash
 npm install
@@ -97,6 +100,26 @@ cp .env.example .env.local
 | `OPSUCHT_API_BASE_URL` | `https://api.opsucht.net` | Basisadresse der öffentlichen API |
 | `OPSUCHT_API_USER_AGENT` | Projektkennung | Aussagekräftiger User-Agent für Upstream-Anfragen |
 | `NEXT_PUBLIC_SITE_URL` | `http://localhost:3000` | Öffentliche Deployment-URL für absolute SEO-Metadaten |
+| `NEXT_PUBLIC_SUPABASE_URL` | nicht gesetzt | Öffentliche Projektadresse für Konten und Cloud-Favoriten |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | nicht gesetzt | Veröffentlichbarer Browser-Key, niemals Secret- oder Service-Role-Key |
+
+Ohne die beiden Supabase-Variablen bleibt das Dashboard vollständig lesbar und Favoriten werden wie bisher lokal gespeichert. Mit gesetzten Variablen wird die Sitzung über sichere SSR-Cookies aktualisiert und lokale Favoriten werden beim ersten Login automatisch mit den Kontofavoriten zusammengeführt.
+
+## Konten und Administration
+
+Das Datenbankschema liegt reproduzierbar unter `supabase/migrations/`. Es erstellt Profile, getrennte Rollen und Kontostatus, Favoriten, globale Einstellungen und ein unveränderbares Admin-Protokoll. Alle exponierten Tabellen besitzen Row Level Security und explizit begrenzte Data-API-Rechte.
+
+Da das Projekt bei der Einrichtung noch keine Konten besitzt, wird ausschließlich das erste erfolgreich registrierte Konto automatisch zum Administrator. Alle späteren Konten starten als normale Benutzer. Das erste Konto sollte daher vor dem öffentlichen Aktivieren der Supabase-Variablen erstellt und per E-Mail bestätigt werden.
+
+Administratoren können im Dashboard:
+
+- bestätigte und unbestätigte Konten, letzte Anmeldung, Rollen, Status und Favoritenanzahl sehen
+- weitere Administratoren ernennen und Konten für persönliche Cloud-Funktionen sperren
+- Favoritensynchronisierung und Profiländerungen global pausieren
+- Kontozahlen, Sitzungen und Favoritenverteilung einsehen
+- sicherheitsrelevante Änderungen im Audit-Protokoll nachvollziehen
+
+Das eigene Adminkonto und der letzte aktive Administrator sind gegen versehentliches Sperren oder Herabstufen geschützt. Passwörter, Tokens und andere Auth-Geheimnisse werden niemals im Adminbereich angezeigt.
 
 ## Projektstruktur
 
@@ -108,9 +131,11 @@ src/
 │   └── ...                   # Alle Anwendungsrouten und Metadaten
 ├── components/
 │   ├── ui/                   # Wiederverwendbare UI-Bausteine
-│   └── ...                   # Shell, Navigation, Suche, Theme, Favoriten
+│   └── ...                   # Shell, Navigation, Suche, Theme, Konten, Favoriten
 ├── features/
 │   ├── auctions/
+│   ├── account/
+│   ├── admin/
 │   ├── calculator/
 │   ├── explorer/
 │   ├── favorites/
@@ -152,7 +177,7 @@ Die zentralen Intervalle stehen in `src/server/opsucht-api.ts`:
 | Händlerkurse | 60 Sekunden |
 | Preisverlauf | 5 Minuten |
 
-Der Cache lebt im Next.js-Serverprozess. Bei einem Neustart oder bei einer neuen serverlosen Instanz beginnt die Statushistorie neu. Eine Datenbank ist für die aktuelle Funktionalität nicht erforderlich.
+Der OPSUCHT-Cache lebt im Next.js-Serverprozess. Bei einem Neustart oder bei einer neuen serverlosen Instanz beginnt die Statushistorie neu. Für öffentliche Wirtschafts- und API-Daten ist weiterhin keine Datenbank erforderlich; Supabase speichert ausschließlich optionale Kontodaten und Favoriten.
 
 ## Minecraft-Spielerprofile
 
@@ -223,14 +248,14 @@ Wenn rechtmäßig bereitgestellte Webfont-Dateien vorliegen, können sie lokal i
 
 ## Lokale Daten
 
-Folgende Informationen werden ausschließlich im Browser über versionierte `localStorage`-Einträge gespeichert:
+Folgende Informationen werden bei Gästen ausschließlich im Browser über versionierte `localStorage`-Einträge gespeichert:
 
 - Theme-Präferenz
 - Markt-, Händler- und Auktionsfavoriten
 - Positionen des Vergleichsrechners
 - zuletzt angesehene Marktitems für die globale Suche
 
-Gespeicherte Objekte werden beim Laden defensiv geprüft. Nicht mehr aktive Auktionen bleiben als beendete Snapshots sichtbar, bis sie ausdrücklich entfernt werden.
+Gespeicherte Objekte werden beim Laden defensiv geprüft. Nicht mehr aktive Auktionen bleiben als beendete Snapshots sichtbar, bis sie ausdrücklich entfernt werden. Nach einer Anmeldung erhält jedes Konto zusätzlich einen getrennten lokalen Offline-Cache; die maßgeblichen Kontofavoriten liegen in Supabase und sind per Benutzer-ID und RLS isoliert.
 
 ## Sicherheit
 
@@ -238,7 +263,9 @@ Gespeicherte Objekte werden beim Laden defensiv geprüft. Nicht mehr aktive Aukt
 - Es gibt keinen offenen Proxy und keine frei eingebbare Ziel-URL.
 - Pfad- und Query-Parameter werden begrenzt und validiert.
 - Stacktraces und interne Serverdetails werden nicht an den Browser gesendet.
-- Die Anwendung implementiert keine Anmeldung, privaten Spielerabfragen oder Ingame-Automation.
+- Konten verwenden ausschließlich Supabase Auth. Adminrollen stammen aus einer getrennten, nicht direkt änderbaren Zugriffstabelle und nie aus benutzeränderbaren Profilmetadaten.
+- Jede exponierte Kontotabelle verwendet RLS. Adminfunktionen prüfen die aktive Adminrolle in einer nicht exponierten Datenbankschicht und protokollieren Änderungen.
+- Es gibt weiterhin keine privaten Spielerabfragen oder Ingame-Automation.
 - Es gibt keine Kauf-, Verkaufs-, Biet-, Maus- oder Tastaturautomation.
 - Zusätzliche Sicherheitsheader werden über `next.config.ts` gesetzt.
 
@@ -257,7 +284,7 @@ Ab 680 Pixeln und darunter werden breite Markt-, Auktions- und Händlertabellen 
 3. Optional die beiden Umgebungsvariablen eintragen.
 4. Deploy ausführen.
 
-Die Route Handler benötigen eine Node.js-Runtime mit ausgehendem HTTPS-Zugriff auf `api.opsucht.net`. Für die Spielernamen und Köpfe werden außerdem die im Abschnitt „Minecraft-Spielerprofile“ genannten öffentlichen Dienste benötigt.
+Die Route Handler benötigen eine Node.js-22-Runtime mit ausgehendem HTTPS-Zugriff auf `api.opsucht.net`. Für die Spielernamen und Köpfe werden außerdem die im Abschnitt „Minecraft-Spielerprofile“ genannten öffentlichen Dienste benötigt. Für Konten müssen die beiden öffentlichen Supabase-Variablen in Vercel gesetzt und als Auth-Redirect mindestens `https://opsucht-dashboard.vercel.app/auth/callback` erlaubt werden.
 
 ### Eigener Node.js-Server
 

@@ -20,7 +20,7 @@ Der zentrale Stack besteht aus:
 - Vitest
 - Vite und vinext für den primären Produktions-Build
 
-Die Anwendung benötigt im normalen Betrieb keine Datenbank und keine geheimen API-Schlüssel.
+Die öffentlichen Wirtschaftsseiten benötigen weiterhin keine Datenbank und keine geheimen API-Schlüssel. Konten, geräteübergreifende Favoriten und Administration verwenden optional Supabase Auth und Postgres mit Row Level Security. Im Browser darf ausschließlich der veröffentlichbare Supabase-Key verwendet werden, niemals ein Secret- oder Service-Role-Key.
 
 ## Wichtige Verzeichnisse
 
@@ -46,7 +46,7 @@ Die Anwendung benötigt im normalen Betrieb keine Datenbank und keine geheimen A
 
 ## Installation und Befehle
 
-Verwende Node.js 20.9 oder neuer.
+Verwende Node.js 22 oder neuer.
 
 ```bash
 npm ci
@@ -142,7 +142,9 @@ Tests sollen reale Randfälle abbilden und dürfen keine fachlich unmöglichen D
 - Dokumentiere neue optionale Variablen in `.env.example` und `README.md`.
 - Verwende keine dynamische Codeausführung für API-Daten oder Benutzereingaben.
 - Behalte Sicherheitsheader und die Allowlist des Proxys bei.
-- Speichere clientseitig nur die bereits vorgesehenen lokalen Präferenzen und Nutzdaten.
+- Speichere clientseitig nur die bereits vorgesehenen lokalen Präferenzen, Nutzdaten und Supabase-Sitzungscookies.
+- Leite Rollen niemals aus benutzeränderbaren Auth-Metadaten ab. Autorisierung bleibt in `account_access`, privaten Prüffunktionen und RLS-Policies.
+- Neue Tabellen im exponierten `public`-Schema benötigen explizite Grants und aktivierte RLS-Policies.
 - Prüfe neue Abhängigkeiten auf Notwendigkeit, Wartungszustand und Lizenzverträglichkeit.
 
 ## Abhängigkeiten

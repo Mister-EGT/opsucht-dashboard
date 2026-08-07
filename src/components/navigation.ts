@@ -32,5 +32,7 @@ export const navigationItems: NavigationItem[] = [
 
 export function pageLabel(pathname: string): string {
   if (pathname.startsWith("/market/")) return "Item-Analyse";
+  if (pathname.startsWith("/admin")) return "Administration";
+  if (pathname.startsWith("/account")) return "Konto";
   return navigationItems.find((item) => item.href === pathname)?.label ?? "Dashboard";
 }
