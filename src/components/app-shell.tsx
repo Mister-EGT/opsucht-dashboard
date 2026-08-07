@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, ChevronRight, Menu, Plus, X } from "lucide-react";
+import { BarChart3, ChevronRight, Menu, Plus, Shield, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch } from "@/components/global-search";
 import { navigationItems, pageLabel } from "@/components/navigation";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ShareCurrentView } from "@/components/share-current-view";
+import { useAccount } from "@/components/account-provider";
 import { Button } from "@/components/ui/button";
 import { cn, safeDecodeURIComponent } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const account = useAccount();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLElement>(null);
@@ -82,6 +84,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
+        <div className="sidebar-account">
+          <Link href="/account" className={cn("sidebar-account-link", isActive(pathname, "/account") && "active")}>
+            <span><UserRound size={17} aria-hidden="true" /></span>
+            <div><strong>{account.loading ? "Konto wird geladen" : account.user ? account.displayName : "Anmelden"}</strong><small>{account.user ? "Profil und Synchronisierung" : "Favoriten geräteübergreifend"}</small></div>
+          </Link>
+          {account.access?.role === "admin" && account.access.status === "active" ? <Link href="/admin" className={cn("sidebar-admin-link", isActive(pathname, "/admin") && "active")}><Shield size={15} />Administration</Link> : null}
+        </div>
         <div className="sidebar-note">
           <span className="status-dot status-ok" />
           <div><strong>Öffentliche Live-Daten</strong><small>Lesender Zugriff über den sicheren Proxy</small></div>
@@ -100,6 +109,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <GlobalSearch />
             <ShareCurrentView />
             <Link href="/calculator" className="quick-action"><Plus size={16} aria-hidden="true" /><span>Vergleich</span></Link>
+            <Link href="/account" className="topbar-account" aria-label={account.user ? `Konto von ${account.displayName}` : "Anmelden"}><UserRound size={17} aria-hidden="true" /><span>{account.user ? account.displayName : "Anmelden"}</span></Link>
             <ThemeSwitcher />
           </div>
         </header>
@@ -124,6 +134,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <aside ref={menuRef} id="mobile-navigation" className="mobile-nav-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
             <div className="mobile-nav-heading"><span id="mobile-navigation-title">Navigation</span><Button data-menu-close variant="ghost" size="icon" onClick={() => setMenuOpen(false)} aria-label="Navigation schließen"><X size={20} /></Button></div>
             <nav>{navigationItems.map((item) => <NavigationLink key={item.href} item={item} active={isActive(pathname, item.href)} onClick={() => setMenuOpen(false)} />)}</nav>
+            {account.access?.role === "admin" && account.access.status === "active" ? <Link href="/admin" className={cn("nav-link", isActive(pathname, "/admin") && "active")} onClick={() => setMenuOpen(false)}><span className="nav-icon"><Shield size={18} /></span><span className="nav-copy"><strong>Administration</strong><small>Konten und Cloud-Funktionen</small></span></Link> : null}
             <ThemeSwitcher />
           </aside>
         </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CircleDollarSign, Gavel, Heart, Store, Trash2 } from "lucide-react";
+import { CircleDollarSign, Cloud, CloudOff, Gavel, Heart, RefreshCw, Store, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFavorites } from "@/components/favorites-provider";
 import { ItemIcon } from "@/components/item-icon";
@@ -44,17 +44,18 @@ export function FavoritesDashboard() {
     || (hasMarketFavorites && (prices.isPending || items.isPending))
     || (hasMerchantFavorites && merchants.isPending)
     || (hasAuctionFavorites && auctions.isPending);
-  if (loading) return <><PageHeader eyebrow="Persönlich" title="Favoriten" description="Gespeicherte Items und Auktionen auf diesem Gerät." /><PageSkeleton /></>;
+  if (loading) return <><PageHeader eyebrow="Persönlich" title="Favoriten" description="Gespeicherte Items und Auktionen werden geladen und bei Bedarf zusammengeführt." /><PageSkeleton /></>;
   const stale = [prices.data?.meta, merchants.data?.meta, auctions.data?.meta].some((meta) => meta?.stale);
   const unavailableAreas = [prices.isError ? "Marktpreise" : null, items.isError ? "Item-Metadaten" : null, merchants.isError ? "Händlerkurse" : null, auctions.isError ? "Auktionen" : null]
     .filter((area): area is string => area !== null);
 
   return (
     <>
-      <PageHeader eyebrow="Persönlich" title="Favoriten" description="Marktitems, Händlerkurse und Auktions-Snapshots werden lokal im Browser gespeichert und mit Live-Daten abgeglichen." actions={<Badge tone="accent"><Heart size={13} /> {total} gespeichert</Badge>} />
+      <PageHeader eyebrow="Persönlich" title="Favoriten" description={favorites.cloudBacked ? "Marktitems, Händlerkurse und Auktions-Snapshots werden auf diesem Gerät und in deinem Konto gespeichert." : "Ohne Anmeldung bleiben deine Favoriten sicher in diesem Browser gespeichert."} actions={<div className="favorite-header-actions"><Badge tone="accent"><Heart size={13} /> {total} gespeichert</Badge><Badge tone={favorites.syncStatus === "error" ? "danger" : favorites.cloudBacked ? "success" : "neutral"}>{favorites.cloudBacked ? <Cloud size={12} /> : <CloudOff size={12} />}{favorites.syncStatus === "synced" ? "Cloud aktuell" : favorites.syncStatus === "syncing" ? "Synchronisiert …" : favorites.syncStatus === "error" ? "Sync-Fehler" : favorites.syncStatus === "paused" ? "Cloud pausiert" : "Nur lokal"}</Badge></div>} />
       {stale ? <StaleBanner /> : null}
+      {favorites.syncError ? <div className="stale-banner" role="alert"><CloudOff size={17} /><span>{favorites.syncError}</span><Button size="sm" onClick={favorites.refreshCloud}><RefreshCw size={14} />Erneut versuchen</Button></div> : null}
       {unavailableAreas.length ? <StaleBanner message={`Der Live-Abgleich ist für folgende Bereiche vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Gespeicherte Favoriten bleiben erhalten.`} /> : null}
-      {total === 0 ? <EmptyState title="Noch keine Favoriten" description="Speichere Items oder Auktionen über das Herzsymbol. Deine Auswahl bleibt lokal auf diesem Gerät erhalten." action={<LinkButton href="/market" variant="primary">Markt entdecken</LinkButton>} /> : (
+      {total === 0 ? <EmptyState title="Noch keine Favoriten" description={favorites.cloudBacked ? "Speichere Items oder Auktionen über das Herzsymbol. Deine Auswahl wird automatisch mit deinem Konto synchronisiert." : "Speichere Items oder Auktionen über das Herzsymbol. Deine Auswahl bleibt lokal auf diesem Gerät erhalten."} action={<LinkButton href="/market" variant="primary">Markt entdecken</LinkButton>} /> : (
         <div className="favorites-grid">
           <Card>
             <CardHeader title="Marktitems" description={`${favorites.market.length} gespeichert`} action={<Store size={18} className="section-icon" />} />
