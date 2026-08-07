@@ -3,7 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useAccount } from "@/components/account-provider";
 import { useToast } from "@/components/toast-provider";
-import { emptyFavoriteState, favoriteStateToRows, favoriteStorageKey, parseFavoriteState, remoteRowsToFavoriteState, resolveCloudFavoriteState } from "@/lib/favorites-sync";
+import { canPersistFavoriteState, emptyFavoriteState, favoriteOwnerKey, favoriteStateToRows, favoriteStorageKey, parseFavoriteState, remoteRowsToFavoriteState, resolveCloudFavoriteState } from "@/lib/favorites-sync";
 import { normalizeMaterialKey } from "@/lib/material";
 import type { Auction } from "@/lib/schemas";
 import type { FavoriteRow } from "@/lib/supabase/database.types";
@@ -41,11 +41,13 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   const { notify } = useToast();
   const [state, setState] = useState<FavoriteState>(emptyFavoriteState);
   const stateRef = useRef(state);
+  const stateOwnerRef = useRef<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [syncStatus, setSyncStatus] = useState<FavoriteSyncStatus>("local");
   const [syncError, setSyncError] = useState<string | null>(null);
   const [refreshVersion, setRefreshVersion] = useState(0);
   const userId = account.user?.id ?? null;
+  const ownerKey = favoriteOwnerKey(userId);
   const cloudEnabled = Boolean(
     userId
     && account.supabase
@@ -61,11 +63,14 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     const supabase = account.supabase;
+    stateOwnerRef.current = null;
+    stateRef.current = emptyFavoriteState;
     const initialLoad = window.setTimeout(() => {
       if (!active) return;
       const cacheKey = favoriteStorageKey(userId);
       const cached = readStoredFavorites(cacheKey);
       replaceState(cached);
+      stateOwnerRef.current = ownerKey;
       setHydrated(false);
       setSyncError(null);
 
@@ -139,10 +144,10 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       active = false;
       window.clearTimeout(initialLoad);
     };
-  }, [account.configured, account.supabase, cloudEnabled, refreshVersion, replaceState, userId]);
+  }, [account.configured, account.supabase, cloudEnabled, ownerKey, refreshVersion, replaceState, userId]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!canPersistFavoriteState(hydrated, stateOwnerRef.current, userId)) return;
     try {
       localStorage.setItem(favoriteStorageKey(userId), JSON.stringify(state));
     } catch {
@@ -156,7 +161,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     entityId: string,
     auction?: Auction,
   ) => {
-    if (!cloudEnabled || !account.supabase || !userId) return;
+    if (!cloudEnabled || !account.supabase || !userId || stateOwnerRef.current !== ownerKey) return;
     setSyncStatus("syncing");
     let result;
     if (action === "delete") {
@@ -179,7 +184,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
       setSyncStatus("synced");
       setSyncError(null);
     }
-  }, [account.supabase, cloudEnabled, notify, userId]);
+  }, [account.supabase, cloudEnabled, notify, ownerKey, userId]);
 
   const toggleMarket = useCallback((material: string) => {
     const normalized = normalizeMaterialKey(material);

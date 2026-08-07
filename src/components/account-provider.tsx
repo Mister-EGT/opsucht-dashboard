@@ -20,12 +20,12 @@ interface AccountContextValue {
   supabase: SupabaseClient<Database> | null;
   displayName: string;
   refreshAccount: () => Promise<void>;
-  signOut: () => Promise<void>;
+  signOut: (scope?: "local" | "global") => Promise<void>;
 }
 
 const defaultSettings: AccountSettings = {
-  cloudFavoritesEnabled: true,
-  profileUpdatesEnabled: true,
+  cloudFavoritesEnabled: false,
+  profileUpdatesEnabled: false,
 };
 
 const AccountContext = createContext<AccountContextValue | null>(null);
@@ -33,8 +33,8 @@ const AccountContext = createContext<AccountContextValue | null>(null);
 function readSettings(rows: { key: string; value: unknown }[] | null): AccountSettings {
   const values = new Map(rows?.map((row) => [row.key, row.value]) ?? []);
   return {
-    cloudFavoritesEnabled: values.get("cloud_favorites_enabled") !== false,
-    profileUpdatesEnabled: values.get("profile_updates_enabled") !== false,
+    cloudFavoritesEnabled: values.get("cloud_favorites_enabled") === true,
+    profileUpdatesEnabled: values.get("profile_updates_enabled") === true,
   };
 }
 
@@ -83,10 +83,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     setLoading(false);
 
     if (profileResult.data && accessResult.data?.status === "active") {
-      void supabase
-        .from("profiles")
-        .update({ last_seen_at: new Date().toISOString() })
-        .eq("id", currentUser.id);
+      void supabase.rpc("touch_own_profile");
     }
   }, [supabase]);
 
@@ -118,9 +115,9 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     await loadAccount();
   }, [loadAccount]);
 
-  const signOut = useCallback(async () => {
+  const signOut = useCallback(async (scope: "local" | "global" = "local") => {
     if (!supabase) return;
-    await supabase.auth.signOut({ scope: "local" });
+    await supabase.auth.signOut({ scope });
     setUser(null);
     setProfile(null);
     setAccess(null);
