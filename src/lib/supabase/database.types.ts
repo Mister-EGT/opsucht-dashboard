@@ -200,6 +200,36 @@ export type Database = {
           user_id: string;
         }[];
       };
+      admin_list_users_v3: {
+        Args: never;
+        Returns: {
+          access_updated_at: string;
+          active_sessions: number;
+          auction_favorites: number;
+          auth_banned_until: string | null;
+          auth_providers: string[];
+          auth_updated_at: string;
+          created_at: string;
+          deletion_requested_at: string | null;
+          display_name: string | null;
+          email: string | null;
+          email_confirmed: boolean;
+          email_confirmed_at: string | null;
+          favorite_snapshot_bytes: number;
+          favorites_count: number;
+          is_anonymous: boolean;
+          last_favorite_at: string | null;
+          last_seen_at: string | null;
+          last_session_at: string | null;
+          last_sign_in_at: string | null;
+          market_favorites: number;
+          merchant_favorites: number;
+          profile_updated_at: string;
+          role: Database["public"]["Enums"]["app_role"];
+          status: Database["public"]["Enums"]["account_status"];
+          user_id: string;
+        }[];
+      };
       admin_set_user_access: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"];

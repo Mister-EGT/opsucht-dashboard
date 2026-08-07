@@ -127,14 +127,15 @@ Normale Benutzer können im Dashboard:
 
 Administratoren können im Dashboard:
 
-- Konten suchen und nach Rolle oder Status filtern
-- bestätigte und unbestätigte Konten, letzte Anmeldung, letzte Aktivität, Rollen, Status und Favoritenverteilung sehen
+- Konten suchen und nach Rolle, Status oder auffälligen Kontosignalen filtern
+- Registrierungen, Aktivität, Bestätigungen, Sitzungen und Favoritennutzung im 14-Tage-Verlauf auswerten
+- Auth-Provider, Änderungszeitpunkte, aktive Sitzungen, Cloud-Speicher und Favoritenverteilung je Konto sehen
 - Kontodetails öffnen und gefilterte Konten als CSV exportieren
 - weitere Administratoren ernennen und Konten für persönliche Cloud-Funktionen sperren
 - gesperrte Konten nach einer zweiten Bestätigung dauerhaft löschen
 - Favoritensynchronisierung und Profiländerungen global pausieren
-- Kontozahlen, Sitzungen und Favoritenverteilung einsehen
-- sicherheitsrelevante Änderungen im Audit-Protokoll nachvollziehen
+- Konten mit Handlungsbedarf und stärkste Cloud-Nutzung direkt aufrufen
+- sicherheitsrelevante Änderungen durchsuchen, vollständig einsehen und als CSV exportieren
 
 Das eigene Adminkonto und der letzte aktive Administrator sind gegen versehentliches Sperren oder Herabstufen geschützt. Die Prüfung wird auch bei parallelen Adminaktionen serialisiert. Passwörter, Tokens und andere Auth-Geheimnisse werden niemals im Adminbereich angezeigt.
 
