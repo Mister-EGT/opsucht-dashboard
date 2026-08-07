@@ -38,7 +38,12 @@ export const adminUserSchema = z.object({
   email_confirmed: z.boolean(),
   created_at: z.string(),
   last_sign_in_at: z.string().nullable(),
+  last_seen_at: z.string().nullable(),
   favorites_count: z.number().nonnegative(),
+  market_favorites: z.number().nonnegative(),
+  merchant_favorites: z.number().nonnegative(),
+  auction_favorites: z.number().nonnegative(),
+  deletion_requested_at: z.string().nullable(),
 });
 
 export const adminAuditSchema = z.object({
@@ -55,6 +60,70 @@ export const adminAuditSchema = z.object({
 export type AdminSummary = z.infer<typeof adminSummarySchema>;
 export type AdminUser = z.infer<typeof adminUserSchema>;
 export type AdminAudit = z.infer<typeof adminAuditSchema>;
+
+export const accountManagementResponseSchema = z.discriminatedUnion("ok", [
+  z.object({
+    ok: z.literal(true),
+    action: z.enum(["delete_self", "delete_user"]),
+    userId: z.string().uuid().optional(),
+  }),
+  z.object({
+    ok: z.literal(false),
+    code: z.string(),
+    message: z.string().optional(),
+  }),
+]);
+
+export type AccountManagementResponse = z.infer<typeof accountManagementResponseSchema>;
+
+export function filterAdminUsers(
+  users: AdminUser[],
+  query: string,
+  role: "all" | "user" | "admin",
+  status: "all" | "active" | "suspended",
+): AdminUser[] {
+  const normalized = query.trim().toLocaleLowerCase("de-DE");
+  return users.filter((user) => {
+    if (role !== "all" && user.role !== role) return false;
+    if (status !== "all" && user.status !== status) return false;
+    if (!normalized) return true;
+    return [user.email, user.display_name, user.user_id]
+      .filter((value): value is string => Boolean(value))
+      .some((value) => value.toLocaleLowerCase("de-DE").includes(normalized));
+  });
+}
+
+function csvCell(value: unknown): string {
+  const text = value == null ? "" : String(value);
+  const safeText = /^\s*[=+\-@]/.test(text) || /^[\t\r]/.test(text) ? `'${text}` : text;
+  return `"${safeText.replaceAll('"', '""')}"`;
+}
+
+export function adminUsersToCsv(users: AdminUser[]): string {
+  const header = [
+    "user_id", "email", "display_name", "role", "status", "email_confirmed",
+    "created_at", "last_sign_in_at", "last_seen_at", "favorites_count",
+    "market_favorites", "merchant_favorites", "auction_favorites",
+  ];
+  const rows = users.map((user) => [
+    user.user_id, user.email, user.display_name, user.role, user.status,
+    user.email_confirmed, user.created_at, user.last_sign_in_at, user.last_seen_at,
+    user.favorites_count, user.market_favorites, user.merchant_favorites, user.auction_favorites,
+  ]);
+  return [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+}
+
+export function downloadTextFile(filename: string, content: string, type: string): void {
+  const url = URL.createObjectURL(new Blob([content], { type }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.hidden = true;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 0);
+}
 
 export function safeAccountRedirectPath(value: string | null): string {
   if (!value?.startsWith("/") || value.startsWith("//") || value.includes("\\")) {

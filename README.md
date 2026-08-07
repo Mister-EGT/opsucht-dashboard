@@ -109,17 +109,42 @@ Ohne die beiden Supabase-Variablen bleibt das Dashboard vollständig lesbar und 
 
 Das Datenbankschema liegt reproduzierbar unter `supabase/migrations/`. Es erstellt Profile, getrennte Rollen und Kontostatus, Favoriten, globale Einstellungen und ein unveränderbares Admin-Protokoll. Alle exponierten Tabellen besitzen Row Level Security und explizit begrenzte Data-API-Rechte.
 
-Da das Projekt bei der Einrichtung noch keine Konten besitzt, wird ausschließlich das erste erfolgreich registrierte Konto automatisch zum Administrator. Alle späteren Konten starten als normale Benutzer. Das erste Konto sollte daher vor dem öffentlichen Aktivieren der Supabase-Variablen erstellt und per E-Mail bestätigt werden.
+Jedes neu registrierte Konto startet aus Sicherheitsgründen als normaler Benutzer. Die Adminrolle wird nie anhand der Registrierungsreihenfolge vergeben. Für ein neues Supabase-Projekt wird zuerst ein Konto registriert und per E-Mail bestätigt. Anschließend führt der Datenbank-Owner einmalig im Supabase SQL Editor aus:
+
+```sql
+select private.bootstrap_admin('admin@example.com');
+```
+
+Die Funktion ist für Browser-, Benutzer- und Service-Role-Zugriffe gesperrt und funktioniert nur, solange noch kein Admin eingerichtet wurde.
+
+Normale Benutzer können im Dashboard:
+
+- Profil, Konto-ID, Bestätigungsstatus und letzte Aktivität einsehen
+- das Passwort nach erneuter Bestätigung des aktuellen Passworts ändern
+- das aktuelle Gerät oder alle Geräte abmelden
+- Profil, Zugriffsdaten und Favoriten als JSON exportieren
+- das eigene Konto nach Passwort- und Texteingabe dauerhaft löschen
 
 Administratoren können im Dashboard:
 
-- bestätigte und unbestätigte Konten, letzte Anmeldung, Rollen, Status und Favoritenanzahl sehen
+- Konten suchen und nach Rolle oder Status filtern
+- bestätigte und unbestätigte Konten, letzte Anmeldung, letzte Aktivität, Rollen, Status und Favoritenverteilung sehen
+- Kontodetails öffnen und gefilterte Konten als CSV exportieren
 - weitere Administratoren ernennen und Konten für persönliche Cloud-Funktionen sperren
+- gesperrte Konten nach einer zweiten Bestätigung dauerhaft löschen
 - Favoritensynchronisierung und Profiländerungen global pausieren
 - Kontozahlen, Sitzungen und Favoritenverteilung einsehen
 - sicherheitsrelevante Änderungen im Audit-Protokoll nachvollziehen
 
-Das eigene Adminkonto und der letzte aktive Administrator sind gegen versehentliches Sperren oder Herabstufen geschützt. Passwörter, Tokens und andere Auth-Geheimnisse werden niemals im Adminbereich angezeigt.
+Das eigene Adminkonto und der letzte aktive Administrator sind gegen versehentliches Sperren oder Herabstufen geschützt. Die Prüfung wird auch bei parallelen Adminaktionen serialisiert. Passwörter, Tokens und andere Auth-Geheimnisse werden niemals im Adminbereich angezeigt.
+
+Die privilegierte Kontolöschung läuft in der Supabase Edge Function `account-management`. Sie verwendet ausschließlich serverseitige Supabase-Schlüssel, protokolliert Löschversuche und erzwingt für Adminlöschungen den gesperrten Kontostatus. Nach `supabase db push` wird sie mit aktivierter JWT-Prüfung bereitgestellt:
+
+```bash
+supabase functions deploy account-management --verify-jwt
+```
+
+Für Vercel sind dafür keine zusätzlichen geheimen Variablen nötig. Supabase stellt der Edge Function die Projekt-Schlüssel in ihrer eigenen Laufzeit bereit.
 
 ## Projektstruktur
 
@@ -264,7 +289,10 @@ Gespeicherte Objekte werden beim Laden defensiv geprüft. Nicht mehr aktive Aukt
 - Pfad- und Query-Parameter werden begrenzt und validiert.
 - Stacktraces und interne Serverdetails werden nicht an den Browser gesendet.
 - Konten verwenden ausschließlich Supabase Auth. Adminrollen stammen aus einer getrennten, nicht direkt änderbaren Zugriffstabelle und nie aus benutzeränderbaren Profilmetadaten.
-- Jede exponierte Kontotabelle verwendet RLS. Adminfunktionen prüfen die aktive Adminrolle in einer nicht exponierten Datenbankschicht und protokollieren Änderungen.
+- Jede exponierte Kontotabelle verwendet RLS. Globale Cloud-Pausen und Kontosperren werden direkt in der Datenbank erzwungen.
+- Adminfunktionen prüfen die aktive Adminrolle in einer nicht exponierten Datenbankschicht und protokollieren Änderungen.
+- Cloud-Favoriten sind auf 1.500 Zeilen pro Konto und 64 KiB je Auktionssnapshot begrenzt.
+- Kontolöschungen laufen nur in einer authentifizierten Edge Function; ein Admin kann ausschließlich bereits gesperrte fremde Konten löschen.
 - Es gibt weiterhin keine privaten Spielerabfragen oder Ingame-Automation.
 - Es gibt keine Kauf-, Verkaufs-, Biet-, Maus- oder Tastaturautomation.
 - Zusätzliche Sicherheitsheader werden über `next.config.ts` gesetzt.

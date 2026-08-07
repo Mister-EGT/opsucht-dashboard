@@ -5,6 +5,18 @@ import type { AuctionFavorite, FavoriteState } from "@/lib/types";
 
 export const emptyFavoriteState: FavoriteState = { market: [], auctions: [], merchant: [] };
 
+export function favoriteOwnerKey(userId: string | null): string {
+  return userId ?? "guest";
+}
+
+export function canPersistFavoriteState(
+  hydrated: boolean,
+  stateOwnerKey: string | null,
+  userId: string | null,
+): boolean {
+  return hydrated && stateOwnerKey === favoriteOwnerKey(userId);
+}
+
 function uniqueStrings(value: unknown, limit: number): string[] {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.filter((item): item is string => typeof item === "string" && Boolean(item.trim())))]

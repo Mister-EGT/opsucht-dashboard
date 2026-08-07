@@ -15,6 +15,8 @@ export type Database = {
       account_access: {
         Row: {
           created_at: string;
+          deletion_requested_at: string | null;
+          deletion_requested_by: string | null;
           role: Database["public"]["Enums"]["app_role"];
           status: Database["public"]["Enums"]["account_status"];
           updated_at: string;
@@ -22,6 +24,8 @@ export type Database = {
         };
         Insert: {
           created_at?: string;
+          deletion_requested_at?: string | null;
+          deletion_requested_by?: string | null;
           role?: Database["public"]["Enums"]["app_role"];
           status?: Database["public"]["Enums"]["account_status"];
           updated_at?: string;
@@ -29,6 +33,8 @@ export type Database = {
         };
         Update: {
           created_at?: string;
+          deletion_requested_at?: string | null;
+          deletion_requested_by?: string | null;
           role?: Database["public"]["Enums"]["app_role"];
           status?: Database["public"]["Enums"]["account_status"];
           updated_at?: string;
@@ -175,6 +181,25 @@ export type Database = {
           user_id: string;
         }[];
       };
+      admin_list_users_v2: {
+        Args: never;
+        Returns: {
+          auction_favorites: number;
+          created_at: string;
+          deletion_requested_at: string | null;
+          display_name: string | null;
+          email: string | null;
+          email_confirmed: boolean;
+          favorites_count: number;
+          last_seen_at: string | null;
+          last_sign_in_at: string | null;
+          market_favorites: number;
+          merchant_favorites: number;
+          role: Database["public"]["Enums"]["app_role"];
+          status: Database["public"]["Enums"]["account_status"];
+          user_id: string;
+        }[];
+      };
       admin_set_user_access: {
         Args: {
           p_role: Database["public"]["Enums"]["app_role"];
@@ -185,6 +210,11 @@ export type Database = {
       };
       admin_update_setting: {
         Args: { p_key: string; p_value: Json };
+        Returns: undefined;
+      };
+      touch_own_profile: { Args: never; Returns: undefined };
+      update_own_profile: {
+        Args: { p_display_name: string };
         Returns: undefined;
       };
     };

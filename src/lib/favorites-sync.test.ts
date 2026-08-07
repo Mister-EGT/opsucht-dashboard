@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { favoriteStateToRows, favoriteStorageKey, mergeFavoriteStates, remoteRowsToFavoriteState, resolveCloudFavoriteState } from "@/lib/favorites-sync";
+import { canPersistFavoriteState, favoriteOwnerKey, favoriteStateToRows, favoriteStorageKey, mergeFavoriteStates, remoteRowsToFavoriteState, resolveCloudFavoriteState } from "@/lib/favorites-sync";
 import type { FavoriteRow } from "@/lib/supabase/database.types";
 import { auctionSchema } from "@/lib/schemas";
 
@@ -19,6 +19,14 @@ describe("Favoriten-Synchronisierung", () => {
   it("trennt Gast- und Benutzer-Cache", () => {
     expect(favoriteStorageKey(null)).toBe("opsucht-favorites-v1");
     expect(favoriteStorageKey("user-1")).toContain("user-1");
+  });
+
+  it("schreibt bei einem Identitätswechsel keinen alten Zustand in den neuen Cache", () => {
+    expect(favoriteOwnerKey(null)).toBe("guest");
+    expect(canPersistFavoriteState(true, "user-a", "user-a")).toBe(true);
+    expect(canPersistFavoriteState(true, "user-a", null)).toBe(false);
+    expect(canPersistFavoriteState(true, "user-a", "user-b")).toBe(false);
+    expect(canPersistFavoriteState(false, "user-b", "user-b")).toBe(false);
   });
 
   it("vereinigt lokale und entfernte Favoriten ohne Duplikate", () => {
