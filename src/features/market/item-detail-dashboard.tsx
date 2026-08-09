@@ -16,7 +16,7 @@ import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { useMarketHistory, useMarketItems, useMarketPrice, useMarketPrices } from "@/hooks/use-opsucht";
 import { useRecentMarketItems } from "@/hooks/use-recent-market-items";
-import { formatDateTime, formatEconomyValue, formatExactPrice, formatMaterialName, formatPrice, formatShortDateTime, parseOpsuchtDate } from "@/lib/format";
+import { formatDateTime, formatDetailedPrice, formatEconomyValue, formatMaterialName, formatPrice, formatShortDateTime, parseOpsuchtDate } from "@/lib/format";
 import { calculateHistoryStats, flattenMarketPrices, sortValidHistoryPoints, splitOrderSides } from "@/lib/market";
 import { normalizeMaterialKey } from "@/lib/material";
 import type { HistoryPoint } from "@/lib/schemas";
@@ -103,8 +103,8 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </Card>
 
       <div className="stat-grid current-price-grid mt-4">
-        <MetricCard label="Kaufkurs (BUY)" value={formatPrice(buyPrice)} note={`${formatEconomyValue(buyOrders)} aktive Kaufaufträge`} icon={ShoppingCart} title={`Exakter Preis: ${formatExactPrice(buyPrice)}`} />
-        <MetricCard label="Verkaufskurs (SELL)" value={formatPrice(sellPrice)} note={`${formatEconomyValue(sellOrders)} aktive Verkaufsaufträge`} icon={Tag} color="#0ea5a4" title={`Exakter Preis: ${formatExactPrice(sellPrice)}`} />
+        <MetricCard label="Kaufkurs (BUY)" value={formatPrice(buyPrice)} note={`${formatEconomyValue(buyOrders)} aktive Kaufaufträge`} icon={ShoppingCart} title={`Preis: ${formatDetailedPrice(buyPrice)}`} />
+        <MetricCard label="Verkaufskurs (SELL)" value={formatPrice(sellPrice)} note={`${formatEconomyValue(sellOrders)} aktive Verkaufsaufträge`} icon={Tag} color="#0ea5a4" title={`Preis: ${formatDetailedPrice(sellPrice)}`} />
       </div>
 
       <Card className="mt-5">
@@ -128,9 +128,9 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </Card>
 
       <div className="stat-grid history-stats mt-4">
-        <MetricCard label="Niedrigster Ø-Kurs" value={formatPrice(stats.minimum)} note={historyNote} icon={TrendingDown} title={`Exakter Preis: ${formatExactPrice(stats.minimum)}`} />
-        <MetricCard label="Höchster Ø-Kurs" value={formatPrice(stats.maximum)} note={historyNote} icon={TrendingUp} color="#c2414b" title={`Exakter Preis: ${formatExactPrice(stats.maximum)}`} />
-        <MetricCard label="Ø der Datenpunkte" value={formatPrice(stats.average)} note={history.isError ? historyNote : "Arithmetisches Mittel der avgPrice-Werte"} icon={BarChart3} color="#8b5cf6" title={`Exakter Preis: ${formatExactPrice(stats.average)}`} />
+        <MetricCard label="Niedrigster Ø-Kurs" value={formatPrice(stats.minimum)} note={historyNote} icon={TrendingDown} title={`Preis: ${formatDetailedPrice(stats.minimum)}`} />
+        <MetricCard label="Höchster Ø-Kurs" value={formatPrice(stats.maximum)} note={historyNote} icon={TrendingUp} color="#c2414b" title={`Preis: ${formatDetailedPrice(stats.maximum)}`} />
+        <MetricCard label="Ø der Datenpunkte" value={formatPrice(stats.average)} note={history.isError ? historyNote : "Arithmetisches Mittel der avgPrice-Werte"} icon={BarChart3} color="#8b5cf6" title={`Preis: ${formatDetailedPrice(stats.average)}`} />
         <MetricCard label="Handelsaktivität" value={history.isError ? "Nicht verfügbar" : `${formatEconomyValue(stats.items)} Items`} note={history.isError ? historyNote : `${formatEconomyValue(stats.transactions)} Transaktionen`} icon={Package} color="#0ea5a4" />
       </div>
     </>
@@ -140,7 +140,7 @@ export function ItemDetailDashboard({ material }: { material: string }) {
 function HistoryTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number; price: number }; value: number }> }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
-  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatExactPrice(point.price)}</span></div>;
+  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatDetailedPrice(point.price)}</span></div>;
 }
 
 function periodLabel(period: HistoryPeriod): string {
@@ -155,5 +155,5 @@ function chartSummary(name: string, period: HistoryPeriod, points: HistoryPoint[
   if (!points.length) return `Für ${name} sind in der ${periodViewLabel(period)} keine Daten verfügbar.`;
   const first = points[0]!;
   const last = points.at(-1)!;
-  return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatExactPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatExactPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.`;
+  return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatDetailedPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatDetailedPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.`;
 }
