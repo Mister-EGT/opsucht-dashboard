@@ -1,6 +1,13 @@
 import type { HistoryPoint, MarketItem, MarketPricesResponse } from "@/lib/schemas";
-import type { HistoryStats, MarketOrderPair, MarketRow } from "@/lib/types";
+import type { HistoryMetric, HistoryPeriod, HistoryStats, MarketOrderPair, MarketRow } from "@/lib/types";
 import { formatMaterialName, parseOpsuchtDate } from "@/lib/format";
+
+const HISTORY_CHART_SERIES: Record<HistoryPeriod, readonly HistoryMetric[]> = {
+  HOURLY: ["avgPrice"],
+  DAILY: ["avgPrice"],
+  WEEKLY: ["avgPrice"],
+  MONTHLY: ["avgPrice"],
+};
 
 export function splitOrderSides(orders: MarketPricesResponse[string][string]): MarketOrderPair {
   const pair: MarketOrderPair = {};
@@ -92,12 +99,16 @@ export function calculateHistoryStats(points: HistoryPoint[]): HistoryStats {
     return { minimum: null, maximum: null, average: null, items: 0, transactions: 0 };
   }
   return {
-    minimum: Math.min(...valid.map((point) => point.minPrice)),
-    maximum: Math.max(...valid.map((point) => point.maxPrice)),
+    minimum: Math.min(...valid.map((point) => point.avgPrice)),
+    maximum: Math.max(...valid.map((point) => point.avgPrice)),
     average: valid.reduce((sum, point) => sum + point.avgPrice, 0) / valid.length,
     items: valid.reduce((sum, point) => sum + point.items, 0),
     transactions: valid.reduce((sum, point) => sum + point.transactions, 0),
   };
+}
+
+export function historyChartSeries(period: HistoryPeriod): readonly HistoryMetric[] {
+  return HISTORY_CHART_SERIES[period];
 }
 
 export function sortValidHistoryPoints(points: HistoryPoint[]): HistoryPoint[] {

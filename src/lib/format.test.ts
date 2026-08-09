@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatEconomyValue, formatExactPrice, formatMaterialName, formatPrice, formatSignedPercentNumber, parseOpsuchtDate } from "@/lib/format";
+import { formatDetailedPrice, formatEconomyValue, formatExactPrice, formatMaterialName, formatPrice, formatSignedPercentNumber, parseOpsuchtDate } from "@/lib/format";
 
 describe("deutsche Formatierung und OPSUCHT-Zeitstempel", () => {
   it("interpretiert zeitzonenlose API-Verläufe ausdrücklich als Europe/Berlin", () => {
@@ -38,5 +38,12 @@ describe("deutsche Formatierung und OPSUCHT-Zeitstempel", () => {
   it("stellt gekürzte Geldpreise bei Bedarf vollständig dar", () => {
     expect(formatExactPrice(1_250_000.125)).toBe("1.250.000,125 $");
     expect(formatExactPrice(undefined)).toBe("Nicht verfügbar");
+  });
+
+  it("begrenzt sichtbare Nachkommastellen ohne kleine Preise zu nullen", () => {
+    expect(formatDetailedPrice(17.69982265)).toBe("17,7 $");
+    expect(formatDetailedPrice(1_250_000.125)).toBe("1.250.000,13 $");
+    expect(formatDetailedPrice(0.0000125)).toBe("0,0000125 $");
+    expect(formatDetailedPrice(null)).toBe("Nicht verfügbar");
   });
 });

@@ -67,6 +67,17 @@ export function formatExactPrice(value: number | null | undefined): string {
   return `${exactPriceFormatter.format(value)} $`;
 }
 
+export function formatDetailedPrice(value: number | null | undefined): string {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "Nicht verfügbar";
+  const absolute = Math.abs(value);
+  const formatted = absolute > 0 && absolute < 0.01
+    ? exactPriceFormatter.format(value)
+    : absolute < 1
+      ? fractionalPriceFormatter.format(value)
+      : numberFormatter.format(value);
+  return `${formatted} $`;
+}
+
 export function formatExactValue(value: number | null | undefined): string {
   return formatNumber(value, 8);
 }
