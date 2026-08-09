@@ -339,11 +339,14 @@ select.field { cursor: pointer; }
 .chart-controls button { min-height: 30px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--panel); color: var(--text-muted); font-size: 10px; font-weight: 650; cursor: pointer; }
 .chart-controls button.active { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); color: var(--accent); }
 .history-toolbar { display: flex; justify-content: flex-end; padding: 12px 20px 0; }
-.chart-series-legend { justify-content: flex-start; gap: 16px; color: var(--text-muted); font-size: 10px; }
+.chart-series-legend { flex-wrap: wrap; justify-content: flex-start; gap: 10px 16px; color: var(--text-muted); font-size: 10px; }
 .chart-series-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .chart-series-swatch { width: 18px; height: 2px; display: inline-block; border-radius: 999px; background: var(--accent); }
 .chart-series-minimum { height: 0; border-top: 2px dashed var(--text-muted); background: transparent; }
 .chart-series-maximum { background: var(--accent); }
+.chart-series-average { background: var(--accent); }
+.chart-series-buy { height: 0; border-top: 2px dashed var(--success); background: transparent; }
+.chart-series-sell { height: 0; border-top: 2px dotted #0ea5a4; background: transparent; }
 .chart-tooltip { min-width: 195px; display: grid; gap: 4px; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--chart-tooltip); color: var(--text); box-shadow: var(--shadow); font-size: 11px; }
 .chart-tooltip strong { margin-bottom: 2px; }
 .chart-tooltip small { color: var(--text-muted); }
