@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Inoffizielles Community-Dashboard für die OPSUCHT-Wirtschaft.",
     start_url: "/",
     display: "standalone",
-    background_color: "#cfddd3",
-    theme_color: "#17211d",
+    background_color: "#ffffff",
+    theme_color: "#09090b",
     lang: "de-DE",
     icons: [{ src: "/icon.svg", sizes: "any", type: "image/svg+xml" }],
   };

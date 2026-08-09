@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { Providers } from "@/components/providers";
 import "./globals.css";
+import "./minimalist.css";
 
 function metadataBase(): URL {
   try {
@@ -36,8 +37,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   minimumScale: 1,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#cfddd3" },
-    { media: "(prefers-color-scheme: dark)", color: "#07100c" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
   ],
 };
 
