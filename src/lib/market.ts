@@ -92,8 +92,8 @@ export function calculateHistoryStats(points: HistoryPoint[]): HistoryStats {
     return { minimum: null, maximum: null, average: null, items: 0, transactions: 0 };
   }
   return {
-    minimum: Math.min(...valid.map((point) => point.minPrice)),
-    maximum: Math.max(...valid.map((point) => point.maxPrice)),
+    minimum: Math.min(...valid.map((point) => point.avgPrice)),
+    maximum: Math.max(...valid.map((point) => point.avgPrice)),
     average: valid.reduce((sum, point) => sum + point.avgPrice, 0) / valid.length,
     items: valid.reduce((sum, point) => sum + point.items, 0),
     transactions: valid.reduce((sum, point) => sum + point.transactions, 0),

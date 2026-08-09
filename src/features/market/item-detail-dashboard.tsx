@@ -24,23 +24,15 @@ import type { HistoryPeriod } from "@/lib/types";
 import { cn, copyToClipboard } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
 
-const periods: Array<{ key: HistoryPeriod; label: string }> = [
-  { key: "HOURLY", label: "Stunden" },
-  { key: "DAILY", label: "Tage" },
-  { key: "WEEKLY", label: "Wochen" },
-  { key: "MONTHLY", label: "Monate" },
-];
-
-type HistoryCourse = "buyPrice" | "sellPrice";
-
-const courses: Array<{ key: HistoryCourse; label: string }> = [
-  { key: "buyPrice", label: "Kaufkurs" },
-  { key: "sellPrice", label: "Verkaufskurs" },
+const periods: Array<{ key: HistoryPeriod; label: string; viewLabel: string }> = [
+  { key: "HOURLY", label: "Stunden", viewLabel: "Stundenansicht" },
+  { key: "DAILY", label: "Tage", viewLabel: "Tagesansicht" },
+  { key: "WEEKLY", label: "Wochen", viewLabel: "Wochenansicht" },
+  { key: "MONTHLY", label: "Monate", viewLabel: "Monatsansicht" },
 ];
 
 export function ItemDetailDashboard({ material }: { material: string }) {
   const [period, setPeriod] = useState<HistoryPeriod>("HOURLY");
-  const [course, setCourse] = useState<HistoryCourse>("buyPrice");
   const price = useMarketPrice(material);
   const history = useMarketHistory(material);
   const allPrices = useMarketPrices();
@@ -73,8 +65,7 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   const chartData = points.map((point) => ({
     ...point,
     time: parseOpsuchtDate(point.timestamp).getTime(),
-    buyPrice: point.maxPrice,
-    sellPrice: point.minPrice,
+    price: point.avgPrice,
   }));
   const historyNote = history.isError ? "Preisverlauf nicht verfügbar" : periodLabel(period);
 
@@ -117,29 +108,28 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </div>
 
       <Card className="mt-5">
-        <CardHeader title="Preisverlauf" description="Historische Kauf- und Verkaufskurse direkt aus der OPSUCHT-API" action={<div className="chart-controls">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
-        <div className="history-toolbar"><div className="chart-controls">{courses.map((option) => <button key={option.key} className={cn(course === option.key && "active")} aria-pressed={course === option.key} onClick={() => setCourse(option.key)}>{option.label}</button>)}</div></div>
-        {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält der Zeitraum ${period.toLocaleLowerCase("de-DE")} keine Datenpunkte.`} /></div> : (
+        <CardHeader title="Preisverlauf" description="Durchschnittliche historische Transaktionspreise direkt aus der OPSUCHT-API" action={<div className="chart-controls">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
+        {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält die ${periodViewLabel(period)} keine Datenpunkte.`} /></div> : (
           <>
-            <div className="chart-container" role="img" aria-label={chartSummary(name, period, course, points)}>
+            <div className="chart-container" role="img" aria-label={chartSummary(name, period, points)}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 12, right: 18, bottom: 2, left: 5 }}>
                   <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="time" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(value) => formatShortDateTime(new Date(value))} stroke="var(--text-muted)" fontSize={10} minTickGap={28} />
                   <YAxis tickFormatter={(value) => formatPrice(Number(value))} stroke="var(--text-muted)" fontSize={10} width={64} domain={["auto", "auto"]} />
-                  <Tooltip content={<HistoryTooltip course={course} />} />
-                  <Line type="monotone" dataKey={course} stroke="var(--accent)" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />
+                  <Tooltip content={<HistoryTooltip />} />
+                  <Line type="monotone" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <p className="chart-summary">{chartSummary(name, period, course, points)}</p>
+            <p className="chart-summary">{chartSummary(name, period, points)}</p>
           </>
         )}
       </Card>
 
       <div className="stat-grid history-stats mt-4">
-        <MetricCard label="Minimum im Zeitraum" value={formatPrice(stats.minimum)} note={historyNote} icon={TrendingDown} title={`Exakter Preis: ${formatExactPrice(stats.minimum)}`} />
-        <MetricCard label="Maximum im Zeitraum" value={formatPrice(stats.maximum)} note={historyNote} icon={TrendingUp} color="#c2414b" title={`Exakter Preis: ${formatExactPrice(stats.maximum)}`} />
+        <MetricCard label="Niedrigster Ø-Kurs" value={formatPrice(stats.minimum)} note={historyNote} icon={TrendingDown} title={`Exakter Preis: ${formatExactPrice(stats.minimum)}`} />
+        <MetricCard label="Höchster Ø-Kurs" value={formatPrice(stats.maximum)} note={historyNote} icon={TrendingUp} color="#c2414b" title={`Exakter Preis: ${formatExactPrice(stats.maximum)}`} />
         <MetricCard label="Ø der Datenpunkte" value={formatPrice(stats.average)} note={history.isError ? historyNote : "Arithmetisches Mittel der avgPrice-Werte"} icon={BarChart3} color="#8b5cf6" title={`Exakter Preis: ${formatExactPrice(stats.average)}`} />
         <MetricCard label="Handelsaktivität" value={history.isError ? "Nicht verfügbar" : `${formatEconomyValue(stats.items)} Items`} note={history.isError ? historyNote : `${formatEconomyValue(stats.transactions)} Transaktionen`} icon={Package} color="#0ea5a4" />
       </div>
@@ -147,24 +137,23 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   );
 }
 
-function HistoryTooltip({ active, payload, course }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number; buyPrice: number; sellPrice: number }; value: number }>; course: HistoryCourse }) {
+function HistoryTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number; price: number }; value: number }> }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
-  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>{courseLabel(course)}: {formatExactPrice(point[course])}</span></div>;
-}
-
-function courseLabel(course: HistoryCourse): string {
-  return courses.find((item) => item.key === course)?.label ?? course;
+  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatExactPrice(point.price)}</span></div>;
 }
 
 function periodLabel(period: HistoryPeriod): string {
   return periods.find((item) => item.key === period)?.label ?? period;
 }
 
-function chartSummary(name: string, period: HistoryPeriod, course: HistoryCourse, points: HistoryPoint[]): string {
-  if (!points.length) return `Keine ${periodLabel(period).toLocaleLowerCase("de-DE")} Daten für ${name}.`;
+function periodViewLabel(period: HistoryPeriod): string {
+  return periods.find((item) => item.key === period)?.viewLabel ?? period;
+}
+
+function chartSummary(name: string, period: HistoryPeriod, points: HistoryPoint[]): string {
+  if (!points.length) return `Für ${name} sind in der ${periodViewLabel(period)} keine Daten verfügbar.`;
   const first = points[0]!;
   const last = points.at(-1)!;
-  const pointValue = (point: HistoryPoint) => course === "buyPrice" ? point.maxPrice : point.minPrice;
-  return `${points.length} ${periodLabel(period).toLocaleLowerCase("de-DE")} Datenpunkte für ${name}. ${courseLabel(course)} von ${formatExactPrice(pointValue(first))} am ${formatDateTime(first.timestamp)} bis ${formatExactPrice(pointValue(last))} am ${formatDateTime(last.timestamp)}.`;
+  return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatExactPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatExactPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.`;
 }

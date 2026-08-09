@@ -67,7 +67,18 @@ describe("Marktberechnungen", () => {
       { timestamp: "2026-07-01T00:00:00", avgPrice: 10, minPrice: 8, maxPrice: 12, items: 5, transactions: 2 },
       { timestamp: "2026-07-02T00:00:00", avgPrice: 20, minPrice: 14, maxPrice: 24, items: 7, transactions: 3 },
     ]);
-    expect(stats).toEqual({ minimum: 8, maximum: 24, average: 15, items: 12, transactions: 5 });
+    expect(stats).toEqual({ minimum: 10, maximum: 20, average: 15, items: 12, transactions: 5 });
     expect(calculateHistoryStats([]).average).toBeNull();
+  });
+
+  it("behandelt einzelne minPrice- und maxPrice-Ausreißer nicht als Verlaufskurse", () => {
+    const stats = calculateHistoryStats([
+      { timestamp: "2024-11-01T01:00:00", avgPrice: 14.48, minPrice: 2, maxPrice: 10_000, items: 919_745, transactions: 35_698 },
+      { timestamp: "2024-12-01T01:00:00", avgPrice: 16.25, minPrice: 4, maxPrice: 80, items: 850_000, transactions: 31_000 },
+    ]);
+
+    expect(stats.minimum).toBe(14.48);
+    expect(stats.maximum).toBe(16.25);
+    expect(stats.maximum).not.toBe(10_000);
   });
 });
