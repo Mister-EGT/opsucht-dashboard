@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ArrowLeft, BarChart3, Copy, Heart, Package, ShoppingCart, Tag, TrendingDown, TrendingUp } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useFavorites } from "@/components/favorites-provider";
@@ -31,16 +31,8 @@ const periods: Array<{ key: HistoryPeriod; label: string; viewLabel: string }> =
   { key: "MONTHLY", label: "Monate", viewLabel: "Monatsansicht" },
 ];
 
-type HistoryCourse = "buyPrice" | "sellPrice";
-
-const courses: Array<{ key: HistoryCourse; label: string }> = [
-  { key: "buyPrice", label: "Kaufkurs" },
-  { key: "sellPrice", label: "Verkaufskurs" },
-];
-
 export function ItemDetailDashboard({ material }: { material: string }) {
-  const [period, setPeriod] = useState<HistoryPeriod>("HOURLY");
-  const [course, setCourse] = useState<HistoryCourse>("buyPrice");
+  const [period, setPeriod] = useState<HistoryPeriod>("WEEKLY");
   const price = useMarketPrice(material);
   const history = useMarketHistory(material);
   const allPrices = useMarketPrices();
@@ -70,8 +62,7 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   );
   const stats = calculateHistoryStats(points);
   const name = row?.name ?? formatMaterialName(material);
-  const hourlyRange = historyChartSeries(period).includes("minPrice");
-  const selectedOrderPrice = course === "buyPrice" ? buyPrice : sellPrice;
+  const [historySeries] = historyChartSeries(period);
   const chartData = points.map((point) => ({
     ...point,
     time: parseOpsuchtDate(point.timestamp).getTime(),
@@ -117,30 +108,20 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </div>
 
       <Card className="mt-5">
-        <CardHeader title="Preisverlauf" description={hourlyRange ? "Stündliche Transaktionsspanne mit dem ausgewählten aktuellen Kurs als Referenz" : "Durchschnittliche historische Transaktionspreise mit dem ausgewählten aktuellen Kurs als Referenz"} action={<div className="chart-controls">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
-        <div className="history-toolbar"><div className="chart-controls" aria-label="Kursart auswählen">{courses.map((option) => <button key={option.key} className={cn(course === option.key && "active")} aria-pressed={course === option.key} onClick={() => setCourse(option.key)}>{option.label}</button>)}</div></div>
+        <CardHeader title="Preisverlauf" description="Durchschnittlicher Transaktionspreis aus der Markt-Historie" action={<div className="chart-controls" aria-label="Zeitraum auswählen">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
         {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält die ${periodViewLabel(period)} keine Datenpunkte.`} /></div> : (
           <>
-            <div className="history-toolbar chart-series-legend" aria-label="Legende des Preisverlaufs">
-              {hourlyRange ? <><span><i className="chart-series-swatch chart-series-minimum" aria-hidden="true" />Transaktionsminimum</span><span><i className="chart-series-swatch chart-series-maximum" aria-hidden="true" />Transaktionsmaximum</span></> : <span><i className="chart-series-swatch chart-series-average" aria-hidden="true" />Ø Transaktionspreis</span>}
-              {selectedOrderPrice !== null ? <span><i className={cn("chart-series-swatch", course === "buyPrice" ? "chart-series-buy" : "chart-series-sell")} aria-hidden="true" />Aktueller {courseLabel(course)} ({courseOrderSide(course)})</span> : null}
-            </div>
-            <div className="chart-container" role="img" aria-label={chartSummary(name, period, points, course, selectedOrderPrice)}>
+            <div className="chart-container" role="img" aria-label={chartSummary(name, period, points)}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 12, right: 18, bottom: 2, left: 5 }}>
                   <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="time" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(value) => formatShortDateTime(new Date(value))} stroke="var(--text-muted)" fontSize={10} minTickGap={28} />
                   <YAxis tickFormatter={(value) => formatPrice(Number(value))} stroke="var(--text-muted)" fontSize={10} width={64} domain={["auto", "auto"]} />
-                  <Tooltip content={<HistoryTooltip period={period} />} />
-                  {selectedOrderPrice !== null ? <ReferenceLine y={selectedOrderPrice} stroke={course === "buyPrice" ? "var(--success)" : "#0ea5a4"} strokeWidth={1.5} strokeDasharray={course === "buyPrice" ? "8 4" : "2 3"} ifOverflow="extendDomain" /> : null}
-                  {hourlyRange ? <>
-                    <Line type="monotone" dataKey="minPrice" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 4 }} connectNulls={false} />
-                    <Line type="monotone" dataKey="maxPrice" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls={false} />
-                  </> : <Line type="monotone" dataKey="avgPrice" stroke="#8b5cf6" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />}
+                  <Tooltip content={<HistoryTooltip />} />
+                  <Line type="monotone" dataKey={historySeries} name="Ø Preis" stroke="#3b82f6" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />
                 </LineChart>
               </ResponsiveContainer>
             </div>
-            <p className="chart-summary">{chartSummary(name, period, points, course, selectedOrderPrice)}</p>
           </>
         )}
       </Card>
@@ -155,41 +136,23 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   );
 }
 
-function HistoryTooltip({ active, payload, period }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number }; value: number }>; period: HistoryPeriod }) {
+function HistoryTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number }; value: number }> }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
-  return period === "HOURLY"
-    ? <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Stundenminimum: {formatDetailedPrice(point.minPrice)}</span><span>Stundenmaximum: {formatDetailedPrice(point.maxPrice)}</span></div>
-    : <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatDetailedPrice(point.avgPrice)}</span></div>;
+  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Preis: {formatDetailedPrice(point.avgPrice)}</span></div>;
 }
 
 function periodLabel(period: HistoryPeriod): string {
   return periods.find((item) => item.key === period)?.label ?? period;
 }
 
-function courseLabel(course: HistoryCourse): string {
-  return courses.find((item) => item.key === course)?.label ?? course;
-}
-
-function courseOrderSide(course: HistoryCourse): "BUY" | "SELL" {
-  return course === "buyPrice" ? "BUY" : "SELL";
-}
-
 function periodViewLabel(period: HistoryPeriod): string {
   return periods.find((item) => item.key === period)?.viewLabel ?? period;
 }
 
-function chartSummary(name: string, period: HistoryPeriod, points: HistoryPoint[], course: HistoryCourse, selectedOrderPrice: number | null): string {
+function chartSummary(name: string, period: HistoryPeriod, points: HistoryPoint[]): string {
   if (!points.length) return `Für ${name} sind in der ${periodViewLabel(period)} keine Daten verfügbar.`;
   const first = points[0]!;
   const last = points.at(-1)!;
-  const currentOrder = orderReferenceSummary(course, selectedOrderPrice);
-  if (period === "HOURLY") {
-    return `${points.length} Datenpunkte in der Stundenansicht für ${name}. Erste Transaktionsspanne von ${formatDetailedPrice(first.minPrice)} bis ${formatDetailedPrice(first.maxPrice)} am ${formatDateTime(first.timestamp)}, letzte Transaktionsspanne von ${formatDetailedPrice(last.minPrice)} bis ${formatDetailedPrice(last.maxPrice)} am ${formatDateTime(last.timestamp)}.${currentOrder}`;
-  }
-  return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatDetailedPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatDetailedPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.${currentOrder}`;
-}
-
-function orderReferenceSummary(course: HistoryCourse, selectedOrderPrice: number | null): string {
-  return selectedOrderPrice === null ? "" : ` Aktueller Referenzwert: ${courseLabel(course)} (${courseOrderSide(course)}) ${formatDetailedPrice(selectedOrderPrice)}.`;
+  return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatDetailedPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatDetailedPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.`;
 }

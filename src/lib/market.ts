@@ -2,6 +2,13 @@ import type { HistoryPoint, MarketItem, MarketPricesResponse } from "@/lib/schem
 import type { HistoryMetric, HistoryPeriod, HistoryStats, MarketOrderPair, MarketRow } from "@/lib/types";
 import { formatMaterialName, parseOpsuchtDate } from "@/lib/format";
 
+const HISTORY_CHART_SERIES: Record<HistoryPeriod, readonly HistoryMetric[]> = {
+  HOURLY: ["avgPrice"],
+  DAILY: ["avgPrice"],
+  WEEKLY: ["avgPrice"],
+  MONTHLY: ["avgPrice"],
+};
+
 export function splitOrderSides(orders: MarketPricesResponse[string][string]): MarketOrderPair {
   const pair: MarketOrderPair = {};
   for (const order of orders) {
@@ -101,7 +108,7 @@ export function calculateHistoryStats(points: HistoryPoint[]): HistoryStats {
 }
 
 export function historyChartSeries(period: HistoryPeriod): readonly HistoryMetric[] {
-  return period === "HOURLY" ? ["minPrice", "maxPrice"] : ["avgPrice"];
+  return HISTORY_CHART_SERIES[period];
 }
 
 export function sortValidHistoryPoints(points: HistoryPoint[]): HistoryPoint[] {

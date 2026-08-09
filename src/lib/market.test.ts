@@ -82,8 +82,8 @@ describe("Marktberechnungen", () => {
     expect(stats.maximum).not.toBe(10_000);
   });
 
-  it("zeigt nur in der Stundenansicht die reale Preisspanne statt Durchschnittswerten", () => {
-    expect(historyChartSeries("HOURLY")).toEqual(["minPrice", "maxPrice"]);
+  it("verwendet in jedem API-Zeitraum ausschließlich den durchschnittlichen Transaktionspreis", () => {
+    expect(historyChartSeries("HOURLY")).toEqual(["avgPrice"]);
     expect(historyChartSeries("DAILY")).toEqual(["avgPrice"]);
     expect(historyChartSeries("WEEKLY")).toEqual(["avgPrice"]);
     expect(historyChartSeries("MONTHLY")).toEqual(["avgPrice"]);

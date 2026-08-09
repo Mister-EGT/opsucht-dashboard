@@ -338,15 +338,6 @@ select.field { cursor: pointer; }
 .chart-controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .chart-controls button { min-height: 30px; padding: 0 9px; border: 1px solid var(--border); border-radius: 7px; background: var(--panel); color: var(--text-muted); font-size: 10px; font-weight: 650; cursor: pointer; }
 .chart-controls button.active { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); color: var(--accent); }
-.history-toolbar { display: flex; justify-content: flex-end; padding: 12px 20px 0; }
-.chart-series-legend { flex-wrap: wrap; justify-content: flex-start; gap: 10px 16px; color: var(--text-muted); font-size: 10px; }
-.chart-series-legend span { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
-.chart-series-swatch { width: 18px; height: 2px; display: inline-block; border-radius: 999px; background: var(--accent); }
-.chart-series-minimum { height: 0; border-top: 2px dashed var(--text-muted); background: transparent; }
-.chart-series-maximum { background: #8b5cf6; }
-.chart-series-average { background: #8b5cf6; }
-.chart-series-buy { height: 0; border-top: 2px dashed var(--success); background: transparent; }
-.chart-series-sell { height: 0; border-top: 2px dotted #0ea5a4; background: transparent; }
 .chart-tooltip { min-width: 195px; display: grid; gap: 4px; padding: 10px 11px; border: 1px solid var(--border); border-radius: 8px; background: var(--chart-tooltip); color: var(--text); box-shadow: var(--shadow); font-size: 11px; }
 .chart-tooltip strong { margin-bottom: 2px; }
 .chart-tooltip small { color: var(--text-muted); }
@@ -814,8 +805,7 @@ kbd { border-radius: 6px; background: var(--panel-soft); box-shadow: 0 1px 0 var
   .item-identity-card h2, .item-identity-card p { overflow-wrap: anywhere; }
   .item-identity-card .badge { margin-left: 0; }
   .identity-update { width: 100%; margin-left: 0; padding-top: 12px; border-top: 1px solid var(--border); text-align: left; }
-  .history-toolbar { max-width: 100%; justify-content: flex-start; padding-inline: 15px; overflow-x: auto; overscroll-behavior-inline: contain; }
-  .history-toolbar .chart-controls, .card-header .chart-controls { max-width: 100%; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; }
+  .card-header .chart-controls { max-width: 100%; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; }
   .chart-controls button { flex: 0 0 auto; }
   .merchant-calculator { padding: 15px; }
   .calculator-inputs, .calculator-inputs + .calculator-divider + .calculator-inputs { grid-template-columns: 1fr; }
@@ -1598,8 +1588,7 @@ html[data-theme="dark"] .data-table th { border-bottom-color: var(--accent); bac
   .item-identity-card h2, .item-identity-card p { overflow-wrap: anywhere; }
   .item-identity-card .badge { margin-left: 0; }
   .identity-update { width: 100%; margin-left: 0; padding-top: 12px; border-top: 1px solid var(--border); text-align: left; }
-  .history-toolbar { max-width: 100%; justify-content: flex-start; padding-inline: 15px; overflow-x: auto; overscroll-behavior-inline: contain; }
-  .history-toolbar .chart-controls, .card-header .chart-controls { max-width: 100%; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; }
+  .card-header .chart-controls { max-width: 100%; flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-inline: contain; }
   .chart-controls button { min-height: 44px; flex: 0 0 auto; }
   .merchant-calculator { padding: 15px; }
   .calculator-inputs, .calculator-inputs + .calculator-divider + .calculator-inputs { grid-template-columns: 1fr; }
