@@ -127,8 +127,8 @@ export function ItemDetailDashboard({ material }: { material: string }) {
                   {sellPrice !== null ? <ReferenceLine y={sellPrice} stroke="#0ea5a4" strokeWidth={1.5} strokeDasharray="2 3" ifOverflow="extendDomain" /> : null}
                   {hourlyRange ? <>
                     <Line type="monotone" dataKey="minPrice" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 4 }} connectNulls={false} />
-                    <Line type="monotone" dataKey="maxPrice" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls={false} />
-                  </> : <Line type="monotone" dataKey="avgPrice" stroke="var(--accent)" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />}
+                    <Line type="monotone" dataKey="maxPrice" stroke="#8b5cf6" strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls={false} />
+                  </> : <Line type="monotone" dataKey="avgPrice" stroke="#8b5cf6" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />}
                 </LineChart>
               </ResponsiveContainer>
             </div>
