@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, ChevronRight, Menu, Plus, Shield, UserRound, X } from "lucide-react";
+import { ChevronRight, Menu, Plus, Shield, UserRound, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { GlobalSearch } from "@/components/global-search";
 import { navigationItems, pageLabel } from "@/components/navigation";
@@ -70,8 +70,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <a href="#main-content" className="skip-link">Zum Hauptinhalt springen</a>
       <aside className="sidebar" aria-label="Hauptnavigation">
         <Link href="/" className="brand" aria-label="OPSUCHT Wirtschaft Startseite">
-          <span className="brand-mark"><BarChart3 size={20} aria-hidden="true" /></span>
-          <span className="brand-copy"><strong>OPSUCHT</strong><small>Datenwerkstatt</small></span>
+          <span className="brand-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3 21 20H3L12 3Z" /><path d="m12 8 4 8H8l4-8Z" /></svg></span>
+          <span className="brand-copy"><strong>OPSUCHT</strong><small>Wirtschaft</small></span>
           <span className="brand-badge">Live</span>
         </Link>
         <nav className="sidebar-nav">
