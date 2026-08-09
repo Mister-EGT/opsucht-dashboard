@@ -17,7 +17,7 @@ import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/
 import { useMarketHistory, useMarketItems, useMarketPrice, useMarketPrices } from "@/hooks/use-opsucht";
 import { useRecentMarketItems } from "@/hooks/use-recent-market-items";
 import { formatDateTime, formatDetailedPrice, formatEconomyValue, formatMaterialName, formatPrice, formatShortDateTime, parseOpsuchtDate } from "@/lib/format";
-import { calculateHistoryStats, flattenMarketPrices, sortValidHistoryPoints, splitOrderSides } from "@/lib/market";
+import { calculateHistoryStats, flattenMarketPrices, historyChartSeries, sortValidHistoryPoints, splitOrderSides } from "@/lib/market";
 import { normalizeMaterialKey } from "@/lib/material";
 import type { HistoryPoint } from "@/lib/schemas";
 import type { HistoryPeriod } from "@/lib/types";
@@ -62,10 +62,10 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   );
   const stats = calculateHistoryStats(points);
   const name = row?.name ?? formatMaterialName(material);
+  const hourlyRange = historyChartSeries(period).includes("minPrice");
   const chartData = points.map((point) => ({
     ...point,
     time: parseOpsuchtDate(point.timestamp).getTime(),
-    price: point.avgPrice,
   }));
   const historyNote = history.isError ? "Preisverlauf nicht verfügbar" : periodLabel(period);
 
@@ -108,17 +108,21 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </div>
 
       <Card className="mt-5">
-        <CardHeader title="Preisverlauf" description="Durchschnittliche historische Transaktionspreise direkt aus der OPSUCHT-API" action={<div className="chart-controls">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
+        <CardHeader title="Preisverlauf" description={hourlyRange ? "Niedrigste und höchste Transaktionspreise je Stunde direkt aus der OPSUCHT-API" : "Durchschnittliche historische Transaktionspreise direkt aus der OPSUCHT-API"} action={<div className="chart-controls">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
         {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält die ${periodViewLabel(period)} keine Datenpunkte.`} /></div> : (
           <>
+            {hourlyRange ? <div className="history-toolbar chart-series-legend" aria-label="Legende der Stundenpreise"><span><i className="chart-series-swatch chart-series-minimum" aria-hidden="true" />Stundenminimum</span><span><i className="chart-series-swatch chart-series-maximum" aria-hidden="true" />Stundenmaximum</span></div> : null}
             <div className="chart-container" role="img" aria-label={chartSummary(name, period, points)}>
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 12, right: 18, bottom: 2, left: 5 }}>
                   <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" vertical={false} />
                   <XAxis dataKey="time" type="number" domain={["dataMin", "dataMax"]} tickFormatter={(value) => formatShortDateTime(new Date(value))} stroke="var(--text-muted)" fontSize={10} minTickGap={28} />
                   <YAxis tickFormatter={(value) => formatPrice(Number(value))} stroke="var(--text-muted)" fontSize={10} width={64} domain={["auto", "auto"]} />
-                  <Tooltip content={<HistoryTooltip />} />
-                  <Line type="monotone" dataKey="price" stroke="var(--accent)" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />
+                  <Tooltip content={<HistoryTooltip period={period} />} />
+                  {hourlyRange ? <>
+                    <Line type="monotone" dataKey="minPrice" stroke="var(--text-muted)" strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 4 }} connectNulls={false} />
+                    <Line type="monotone" dataKey="maxPrice" stroke="var(--accent)" strokeWidth={2} dot={false} activeDot={{ r: 5 }} connectNulls={false} />
+                  </> : <Line type="monotone" dataKey="avgPrice" stroke="var(--accent)" strokeWidth={2} dot={chartData.length < 20} activeDot={{ r: 5 }} connectNulls={false} />}
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -137,10 +141,12 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   );
 }
 
-function HistoryTooltip({ active, payload }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number; price: number }; value: number }> }) {
+function HistoryTooltip({ active, payload, period }: { active?: boolean; payload?: Array<{ payload: HistoryPoint & { time: number }; value: number }>; period: HistoryPeriod }) {
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
-  return <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatDetailedPrice(point.price)}</span></div>;
+  return period === "HOURLY"
+    ? <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Stundenminimum: {formatDetailedPrice(point.minPrice)}</span><span>Stundenmaximum: {formatDetailedPrice(point.maxPrice)}</span></div>
+    : <div className="chart-tooltip"><strong>{formatDateTime(point.timestamp)}</strong><span>Ø Transaktionspreis: {formatDetailedPrice(point.avgPrice)}</span></div>;
 }
 
 function periodLabel(period: HistoryPeriod): string {
@@ -155,5 +161,8 @@ function chartSummary(name: string, period: HistoryPeriod, points: HistoryPoint[
   if (!points.length) return `Für ${name} sind in der ${periodViewLabel(period)} keine Daten verfügbar.`;
   const first = points[0]!;
   const last = points.at(-1)!;
+  if (period === "HOURLY") {
+    return `${points.length} Datenpunkte in der Stundenansicht für ${name}. Erste Preisspanne von ${formatDetailedPrice(first.minPrice)} bis ${formatDetailedPrice(first.maxPrice)} am ${formatDateTime(first.timestamp)}, letzte Preisspanne von ${formatDetailedPrice(last.minPrice)} bis ${formatDetailedPrice(last.maxPrice)} am ${formatDateTime(last.timestamp)}.`;
+  }
   return `${points.length} Datenpunkte in der ${periodViewLabel(period)} für ${name}. Durchschnittlicher Transaktionspreis von ${formatDetailedPrice(first.avgPrice)} am ${formatDateTime(first.timestamp)} bis ${formatDetailedPrice(last.avgPrice)} am ${formatDateTime(last.timestamp)}.`;
 }

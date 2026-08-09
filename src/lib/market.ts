@@ -1,5 +1,5 @@
 import type { HistoryPoint, MarketItem, MarketPricesResponse } from "@/lib/schemas";
-import type { HistoryStats, MarketOrderPair, MarketRow } from "@/lib/types";
+import type { HistoryMetric, HistoryPeriod, HistoryStats, MarketOrderPair, MarketRow } from "@/lib/types";
 import { formatMaterialName, parseOpsuchtDate } from "@/lib/format";
 
 export function splitOrderSides(orders: MarketPricesResponse[string][string]): MarketOrderPair {
@@ -98,6 +98,10 @@ export function calculateHistoryStats(points: HistoryPoint[]): HistoryStats {
     items: valid.reduce((sum, point) => sum + point.items, 0),
     transactions: valid.reduce((sum, point) => sum + point.transactions, 0),
   };
+}
+
+export function historyChartSeries(period: HistoryPeriod): readonly HistoryMetric[] {
+  return period === "HOURLY" ? ["minPrice", "maxPrice"] : ["avgPrice"];
 }
 
 export function sortValidHistoryPoints(points: HistoryPoint[]): HistoryPoint[] {

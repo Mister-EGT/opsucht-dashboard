@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateHistoryStats, calculateSpread, flattenMarketPrices, sortValidHistoryPoints, splitOrderSides } from "@/lib/market";
+import { calculateHistoryStats, calculateSpread, flattenMarketPrices, historyChartSeries, sortValidHistoryPoints, splitOrderSides } from "@/lib/market";
 
 describe("Marktberechnungen", () => {
   it("ordnet BUY und SELL anhand des Feldes statt der Position zu", () => {
@@ -80,5 +80,12 @@ describe("Marktberechnungen", () => {
     expect(stats.minimum).toBe(14.48);
     expect(stats.maximum).toBe(16.25);
     expect(stats.maximum).not.toBe(10_000);
+  });
+
+  it("zeigt nur in der Stundenansicht die reale Preisspanne statt Durchschnittswerten", () => {
+    expect(historyChartSeries("HOURLY")).toEqual(["minPrice", "maxPrice"]);
+    expect(historyChartSeries("DAILY")).toEqual(["avgPrice"]);
+    expect(historyChartSeries("WEEKLY")).toEqual(["avgPrice"]);
+    expect(historyChartSeries("MONTHLY")).toEqual(["avgPrice"]);
   });
 });
