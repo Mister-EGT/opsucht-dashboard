@@ -76,7 +76,7 @@ export function OverviewDashboard() {
     .at(-1);
 
   return (
-    <>
+    <div className="overview-dashboard">
       <PageHeader
         eyebrow="Live-Wirtschaft"
         title="Wirtschaft im Überblick"
@@ -85,16 +85,26 @@ export function OverviewDashboard() {
       />
       {stale ? <StaleBanner /> : null}
       {unavailableAreas.length ? <StaleBanner message={`Einige Datenbereiche sind vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Verfügbare Bereiche bleiben nutzbar.`} /> : null}
-      <div className="stat-grid">
+      <div className="overview-tape" aria-label="Datenabdeckung">
+        <span className="overview-tape-status">
+          <span className={`status-dot ${unavailableAreas.length || stale ? "status-warn" : "status-ok"}`} aria-hidden="true" />
+          {unavailableAreas.length || stale ? "Teilweise verfügbar" : "Live verbunden"}
+        </span>
+        <span>Auktionshaus</span>
+        <span>Marktpreise</span>
+        <span>Händlerkurse</span>
+        <span className="overview-tape-time">{lastUpdated ? `Stand ${formatDateTime(lastUpdated)}` : "Automatische Aktualisierung"}</span>
+      </div>
+      <div className="stat-grid overview-stat-grid">
         <MetricCard label="Laufende Auktionen" value={formatEconomyValue(activeAuctions.length)} note={`${formatEconomyValue(endingSoon.length)} enden in 15 Minuten`} icon={Gavel} />
         <MetricCard label="Erfasste Marktitems" value={formatEconomyValue(marketRows.length || items.data?.data.length)} note={`${formatEconomyValue(categories.data?.data.length)} Kategorien verfügbar`} icon={Store} color="#0ea5a4" />
         <MetricCard label="Händlerkurse" value={formatEconomyValue(merchants.data?.data.length)} note={`${merchantRateCounts.opshards} OPShards · ${merchantRateCounts.redcoins} Redcoins`} icon={CircleDollarSign} color="#8b5cf6" />
         <MetricCard label="API-Bereiche" value={health.data ? `${health.data.healthy}/${health.data.total}` : "Wird geprüft"} note={lastUpdated ? `Stand ${formatDateTime(lastUpdated)}` : "Noch keine Aktualisierung"} icon={Activity} color="#f59e0b" />
       </div>
 
-      <div className="section-grid dashboard-grid mt-5">
+      <div className="section-grid dashboard-grid overview-primary-grid mt-5">
         <MarketMovementCard rows={marketRows} />
-        <Card>
+        <Card className="overview-panel overview-auctions">
           <CardHeader title="Bald endende Auktionen" description="Restzeit unter 15 Minuten" action={<LinkButton href="/auctions?soon=1" size="sm">Alle anzeigen <ArrowRight size={14} /></LinkButton>} />
           <div className="list-body">
             {endingSoon.length ? endingSoon.slice(0, 6).map((auction) => {
@@ -111,15 +121,15 @@ export function OverviewDashboard() {
         </Card>
       </div>
 
-      <div className="section-grid dashboard-grid mt-5">
-        <Card>
+      <div className="section-grid dashboard-grid overview-secondary-grid mt-5">
+        <Card className="overview-panel overview-prices">
           <CardHeader title="Preisextreme" description="Aktuelle BUY-Kurse, nicht historische Höchst- oder Tiefstwerte" action={<LinkButton href="/market" size="sm">Markt öffnen <ArrowRight size={14} /></LinkButton>} />
           <div className="price-extremes">
             <PriceList title="Hohe Preise" rows={highPrices} tone="high" />
             <PriceList title="Niedrige Preise" rows={lowPrices} tone="low" />
           </div>
         </Card>
-        <Card>
+        <Card className="overview-panel overview-favorites">
           <CardHeader title="Favorisierte Items" description="Persönlicher Schnellzugriff auf diesem Gerät" action={<LinkButton href="/favorites" size="sm">Favoriten <ArrowRight size={14} /></LinkButton>} />
           <div className="list-body">
             {favoriteRows.length ? favoriteRows.map((row) => (
@@ -132,7 +142,7 @@ export function OverviewDashboard() {
           </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 }
 
@@ -171,7 +181,7 @@ function MarketMovementCard({ rows }: { rows: ReturnType<typeof flattenMarketPri
   const loading = queries.some((query) => query.isPending);
 
   return (
-    <Card>
+    <Card className="overview-panel overview-movements">
       <CardHeader title="Ausgewählte Marktbewegungen" description="Vergleich der letzten zwei echten stündlichen Durchschnittswerte" />
       <div className="movement-grid">
         {movements.length ? movements.map((movement) => {
