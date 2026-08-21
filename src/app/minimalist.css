@@ -1014,7 +1014,7 @@ html[data-theme="dark"] .button-primary { border-color: var(--accent); backgroun
 .item-icon { border-radius: 10px; corner-shape: squircle; }
 .dialog { border-radius: var(--radius-lg); corner-shape: squircle; }
 
-.overview-scroll-section { scroll-margin-top: 84px; }
+.scroll-progress-section { scroll-margin-top: 84px; }
 
 .scroll-progress {
   position: fixed;

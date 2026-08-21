@@ -84,7 +84,7 @@ export function OverviewDashboard() {
     .at(-1);
 
   return (
-    <div id="overview-start" className="overview-dashboard overview-scroll-section">
+    <div id="overview-start" className="overview-dashboard scroll-progress-section">
       <ScrollProgress sections={OVERVIEW_SECTIONS} />
       <PageHeader
         title="Wirtschaft im Überblick"
@@ -103,14 +103,14 @@ export function OverviewDashboard() {
         <span>Händlerkurse</span>
         <span className="overview-tape-time">{lastUpdated ? `Stand ${formatDateTime(lastUpdated)}` : "Automatische Aktualisierung"}</span>
       </div>
-      <div id="overview-kpis" className="stat-grid overview-stat-grid overview-scroll-section">
+      <div id="overview-kpis" className="stat-grid overview-stat-grid scroll-progress-section">
         <MetricCard label="Laufende Auktionen" value={formatEconomyValue(activeAuctions.length)} note={`${formatEconomyValue(endingSoon.length)} enden in 15 Minuten`} icon={Gavel} />
         <MetricCard label="Erfasste Marktitems" value={formatEconomyValue(marketRows.length || items.data?.data.length)} note={`${formatEconomyValue(categories.data?.data.length)} Kategorien verfügbar`} icon={Store} color="#0ea5a4" />
         <MetricCard label="Händlerkurse" value={formatEconomyValue(merchants.data?.data.length)} note={`${merchantRateCounts.opshards} OPShards · ${merchantRateCounts.redcoins} Redcoins`} icon={CircleDollarSign} color="#8b5cf6" />
         <MetricCard label="API-Bereiche" value={health.data ? `${health.data.healthy}/${health.data.total}` : "Wird geprüft"} note={lastUpdated ? `Stand ${formatDateTime(lastUpdated)}` : "Noch keine Aktualisierung"} icon={Activity} color="#f59e0b" />
       </div>
 
-      <div id="overview-market" className="section-grid dashboard-grid overview-primary-grid overview-scroll-section mt-5">
+      <div id="overview-market" className="section-grid dashboard-grid overview-primary-grid scroll-progress-section mt-5">
         <MarketMovementCard rows={marketRows} />
         <Card className="overview-panel overview-auctions">
           <CardHeader title="Bald endende Auktionen" description="Restzeit unter 15 Minuten" action={<LinkButton href="/auctions?soon=1" size="sm">Alle anzeigen <ArrowRight size={14} /></LinkButton>} />
@@ -129,7 +129,7 @@ export function OverviewDashboard() {
         </Card>
       </div>
 
-      <div id="overview-prices" className="section-grid dashboard-grid overview-secondary-grid overview-scroll-section mt-5">
+      <div id="overview-prices" className="section-grid dashboard-grid overview-secondary-grid scroll-progress-section mt-5">
         <Card className="overview-panel overview-prices">
           <CardHeader title="Preisextreme" description="Aktuelle BUY-Kurse, nicht historische Höchst- oder Tiefstwerte" action={<LinkButton href="/market" size="sm">Markt öffnen <ArrowRight size={14} /></LinkButton>} />
           <div className="price-extremes">

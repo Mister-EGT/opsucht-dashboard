@@ -23,11 +23,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
+import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
 import { useMerchantRates } from "@/hooks/use-opsucht";
 import { parseMerchantQuery } from "@/lib/filter-url";
 import { formatEconomyValue, formatExactValue, formatPercentNumber, formatSignedPercentNumber } from "@/lib/format";
 import { calculateMerchantValue, calculateRequiredItems, merchantCurrencyLabel, normalizeMerchantRates, normalizeWholeItemQuantity } from "@/lib/merchant";
 import type { ParsedMerchantRate } from "@/lib/types";
+
+const MERCHANT_SECTIONS: ScrollProgressSection[] = [
+  { id: "merchant-start", label: "Überblick" },
+  { id: "merchant-calculator", label: "Händlerrechner" },
+  { id: "merchant-rates", label: "Wechselkurse" },
+];
 
 export function MerchantDashboard() {
   const searchParams = useSearchParams();
@@ -65,15 +72,16 @@ export function MerchantDashboard() {
   if (ratesQuery.isError) return <><PageHeader eyebrow="Händlerwährungen" title="Händler und Wechselkurse" description="Aktuelle Kurse für OPShards und Redcoins." /><ErrorState message={ratesQuery.error.message} onRetry={() => ratesQuery.refetch()} /></>;
 
   return (
-    <>
+    <div id="merchant-start" className="scroll-progress-section">
+      <ScrollProgress sections={MERCHANT_SECTIONS} />
       <PageHeader eyebrow="Händlerwährungen" title="Händler und Wechselkurse" description="Aktuelle OPShards- und Redcoins-Kurse für Standard- und Custom-Items." actions={<><DataFreshness meta={ratesQuery.data?.meta} fetching={ratesQuery.isFetching} /><RefreshButton fetching={ratesQuery.isFetching} onRefresh={() => { ratesQuery.refetch(); }} /></>} />
       {ratesQuery.data?.meta.stale ? <StaleBanner message={ratesQuery.data.meta.error} /> : null}
-      <MerchantCalculator rates={rates} />
-      <Card className="mt-5">
+      <div id="merchant-calculator" className="scroll-progress-section"><MerchantCalculator rates={rates} /></div>
+      <Card id="merchant-rates" className="scroll-progress-section mt-5">
         <div className="toolbar"><div className="field-group search-field"><FieldLabel htmlFor="merchant-search">Händleritem suchen</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="merchant-search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Itemname, Material oder Zielwährung" /></div></div><span className="toolbar-summary">{filtered.length} von {rates.length} Kursen</span></div>
         {filtered.length === 0 ? <div className="p-4"><EmptyState title="Kein Händleritem gefunden" description="Der Suchbegriff passt zu keinem aktuellen Händlerkurs." action={<Button onClick={() => setQuery("")}>Suche löschen</Button>} /></div> : <><div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div><div className="mobile-card-list">{table.getRowModel().rows.map((row) => <MerchantCard key={row.original.id} rate={row.original} />)}</div></>}
       </Card>
-    </>
+    </div>
   );
 }
 

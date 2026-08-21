@@ -27,12 +27,19 @@ import { Card } from "@/components/ui/card";
 import { LinkButton } from "@/components/ui/link-button";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
+import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
 import { useMarketCategories, useMarketItems, useMarketPrices } from "@/hooks/use-opsucht";
 import { marketFilterHref, parseMarketFilters, type MarketAvailability } from "@/lib/filter-url";
 import { formatEconomyValue, formatPercentNumber } from "@/lib/format";
 import { flattenMarketPrices } from "@/lib/market";
 import type { MarketRow } from "@/lib/types";
 import { cn } from "@/lib/utils";
+
+const MARKET_SECTIONS: ScrollProgressSection[] = [
+  { id: "market-start", label: "Überblick" },
+  { id: "market-categories", label: "Kategorien" },
+  { id: "market-results", label: "Marktitems" },
+];
 
 export function MarketDashboard() {
   const searchParams = useSearchParams();
@@ -103,15 +110,16 @@ export function MarketDashboard() {
   const unavailableAreas = [items.isError ? "Item-Metadaten" : null, categories.isError ? "Marktkategorien" : null]
     .filter((area): area is string => area !== null);
   return (
-    <div className="market-dashboard">
+    <div id="market-start" className="market-dashboard scroll-progress-section">
+      <ScrollProgress sections={MARKET_SECTIONS} />
       <PageHeader eyebrow="Marktdaten" title="Marktübersicht" description="BUY- und SELL-Kurse werden anhand von orderSide zugeordnet, unabhängig von ihrer Reihenfolge in der API." actions={<><DataFreshness meta={prices.data?.meta} fetching={prices.isFetching} /><RefreshButton fetching={prices.isFetching || items.isFetching || categories.isFetching} onRefresh={() => { prices.refetch(); items.refetch(); categories.refetch(); }} /></>} />
       {prices.data?.meta.stale ? <StaleBanner message={prices.data.meta.error} /> : null}
       {unavailableAreas.length ? <StaleBanner message={`Zusatzdaten sind vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Die vorhandenen Marktpreise werden weiterhin angezeigt.`} /> : null}
-      <div className="category-tabs" role="navigation" aria-label="Marktkategorien">
+      <div id="market-categories" className="category-tabs scroll-progress-section" role="navigation" aria-label="Marktkategorien">
         <button className={cn(!category && "active")} aria-pressed={!category} onClick={() => updateFilters({ category: "" })}>Alle <span>{rows.length}</span></button>
         {(categories.data?.data ?? []).map((item) => <button className={cn(category === item.name && "active")} aria-pressed={category === item.name} key={item.name} onClick={() => updateFilters({ category: item.name })}><ItemIcon src={item.icon} name={item.name} size={24} />{item.name}<span>{rows.filter((row) => row.category === item.name).length}</span></button>)}
       </div>
-      <Card>
+      <Card id="market-results" className="scroll-progress-section">
         <div className="toolbar">
           <div className="field-group search-field"><FieldLabel htmlFor="market-search">Globale Suche</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="market-search" value={query} onChange={(event) => updateFilters({ query: event.target.value })} placeholder="Item, Material oder Kategorie" /></div></div>
           <div className="field-group"><FieldLabel htmlFor="market-availability">Datenstatus</FieldLabel><Select id="market-availability" value={availability} onChange={(event) => updateFilters({ availability: event.target.value as MarketAvailability })}><option value="all">Alle Items</option><option value="tradable">Mit aktiven Aufträgen</option><option value="incomplete">Unvollständige Kurse</option></Select></div>

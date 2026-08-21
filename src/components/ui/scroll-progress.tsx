@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 
 export type ScrollProgressSection = {
   id: string;
@@ -13,6 +13,7 @@ type Size = {
 };
 
 export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProgressSection[]; offset?: number }) {
+  const menuId = useId();
   const [activeId, setActiveId] = useState(sections[0]?.id ?? "");
   const [open, setOpen] = useState(false);
   const [pillSize, setPillSize] = useState<Size>();
@@ -136,7 +137,7 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
           className="scroll-progress-trigger"
           aria-label="Seitenabschnitte öffnen"
           aria-expanded={open}
-          aria-controls="overview-scroll-sections"
+          aria-controls={menuId}
           tabIndex={open ? -1 : 0}
           onClick={() => setOpen(true)}
         >
@@ -147,7 +148,7 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
           <span key={activeId} className="scroll-progress-label">{activeLabel}</span>
         </button>
 
-        <nav id="overview-scroll-sections" className="scroll-progress-menu" aria-label="Abschnitte dieser Seite" aria-hidden={!open}>
+        <nav id={menuId} className="scroll-progress-menu" aria-label="Abschnitte dieser Seite" aria-hidden={!open}>
           {sections.map((section) => {
             const active = section.id === activeId;
             return (
