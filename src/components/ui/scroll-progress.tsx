@@ -23,6 +23,8 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
   const pillMeasureRef = useRef<HTMLDivElement>(null);
   const menuMeasureRef = useRef<HTMLDivElement>(null);
   const activeIdRef = useRef(activeId);
+  const activeLockRef = useRef(false);
+  const activeLockTimerRef = useRef<number | null>(null);
   const frameRef = useRef<number | null>(null);
 
   const activeLabel = sections.find((section) => section.id === activeId)?.label ?? sections[0]?.label ?? "Überblick";
@@ -52,8 +54,9 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
       const progress = scrollableDistance === 0 ? 1 : Math.min(Math.max(window.scrollY / scrollableDistance, 0), 1);
       if (progressRef.current) progressRef.current.style.strokeDashoffset = String(1 - progress);
       rootRef.current?.classList.toggle("is-scrollable", scrollableDistance > 16);
+      if (activeLockRef.current) return;
 
-      const active = sections.findLast((section) => {
+      const active = scrollableDistance - window.scrollY <= 2 ? sections.at(-1) : sections.findLast((section) => {
         const top = document.getElementById(section.id)?.getBoundingClientRect().top;
         return top !== undefined && top <= offset;
       });
@@ -75,6 +78,7 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
       window.removeEventListener("scroll", scheduleUpdate);
       window.removeEventListener("resize", scheduleUpdate);
       if (frameRef.current !== null) window.cancelAnimationFrame(frameRef.current);
+      if (activeLockTimerRef.current !== null) window.clearTimeout(activeLockTimerRef.current);
     };
   }, [offset, sections]);
 
@@ -98,6 +102,11 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
 
   const selectSection = (id: string) => {
     const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    activeLockRef.current = true;
+    if (activeLockTimerRef.current !== null) window.clearTimeout(activeLockTimerRef.current);
+    activeLockTimerRef.current = window.setTimeout(() => {
+      activeLockRef.current = false;
+    }, reducedMotion ? 0 : 700);
     activeIdRef.current = id;
     setActiveId(id);
     setOpen(false);
