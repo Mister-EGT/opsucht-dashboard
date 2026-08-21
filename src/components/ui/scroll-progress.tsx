@@ -30,10 +30,10 @@ export function ScrollProgress({ sections, offset = 92 }: { sections: ScrollProg
   useLayoutEffect(() => {
     const measure = () => {
       if (pillMeasureRef.current) {
-        setPillSize({ width: pillMeasureRef.current.offsetWidth, height: pillMeasureRef.current.offsetHeight });
+        setPillSize({ width: pillMeasureRef.current.offsetWidth + 2, height: pillMeasureRef.current.offsetHeight + 2 });
       }
       if (menuMeasureRef.current) {
-        setMenuSize({ width: menuMeasureRef.current.offsetWidth, height: menuMeasureRef.current.offsetHeight });
+        setMenuSize({ width: menuMeasureRef.current.offsetWidth + 2, height: menuMeasureRef.current.offsetHeight + 2 });
       }
     };
 
