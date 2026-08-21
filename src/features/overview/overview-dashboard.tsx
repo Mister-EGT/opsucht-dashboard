@@ -59,8 +59,8 @@ export function OverviewDashboard() {
     [rate.target]: counts[rate.target] + 1,
   }), { opshards: 0, redcoins: 0 });
 
-  if (loading) return <><PageHeader eyebrow="Live-Wirtschaft" title="Wirtschaft im Überblick" description="Die wichtigsten Markt-, Auktions- und Händlerdaten in einer gemeinsamen Analyseansicht." /><PageSkeleton cards={4} /></>;
-  if (allFailed) return <><PageHeader eyebrow="Live-Wirtschaft" title="Wirtschaft im Überblick" description="Die wichtigsten Markt-, Auktions- und Händlerdaten in einer gemeinsamen Analyseansicht." /><ErrorState onRetry={() => { auctions.refetch(); prices.refetch(); items.refetch(); categories.refetch(); merchants.refetch(); }} /></>;
+  if (loading) return <><PageHeader title="Wirtschaft im Überblick" description="Markt, Auktionen und Händlerdaten auf einen Blick." /><PageSkeleton cards={4} /></>;
+  if (allFailed) return <><PageHeader title="Wirtschaft im Überblick" description="Markt, Auktionen und Händlerdaten auf einen Blick." /><ErrorState onRetry={() => { auctions.refetch(); prices.refetch(); items.refetch(); categories.refetch(); merchants.refetch(); }} /></>;
 
   const stale = [auctions.data?.meta, prices.data?.meta, items.data?.meta, categories.data?.meta, merchants.data?.meta].some((meta) => meta?.stale);
   const unavailableAreas = [
@@ -78,14 +78,13 @@ export function OverviewDashboard() {
   return (
     <div className="overview-dashboard">
       <PageHeader
-        eyebrow="Live-Wirtschaft"
         title="Wirtschaft im Überblick"
-        description="Echte öffentliche OPSUCHT-Daten, übersichtlich aufbereitet für schnelle Entscheidungen und tiefere Marktanalysen."
+        description="Markt, Auktionen und Händlerdaten auf einen Blick."
         actions={<DataFreshness meta={prices.data?.meta} fetching={prices.isFetching} />}
       />
       {stale ? <StaleBanner /> : null}
       {unavailableAreas.length ? <StaleBanner message={`Einige Datenbereiche sind vorübergehend nicht verfügbar: ${unavailableAreas.join(", ")}. Verfügbare Bereiche bleiben nutzbar.`} /> : null}
-      <div className="overview-tape" aria-label="Datenabdeckung">
+      <div className="overview-tape" role="status" aria-label="Datenabdeckung">
         <span className="overview-tape-status">
           <span className={`status-dot ${unavailableAreas.length || stale ? "status-warn" : "status-ok"}`} aria-hidden="true" />
           {unavailableAreas.length || stale ? "Teilweise verfügbar" : "Live verbunden"}
