@@ -29,11 +29,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
+import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
 import { auctionFilterHref, parseAuctionFilters } from "@/lib/filter-url";
 import { buildAuctionCategoryNavigation } from "@/lib/auction-categories";
 import { formatMaterialName, formatRelativeTime } from "@/lib/format";
 import type { Auction } from "@/lib/schemas";
 import { cn, copyToClipboard } from "@/lib/utils";
+
+const AUCTION_SECTIONS: ScrollProgressSection[] = [
+  { id: "auctions-start", label: "Überblick" },
+  { id: "auctions-filters", label: "Filter & Ansicht" },
+  { id: "auctions-results", label: "Auktionen" },
+];
 
 function useClock(): number {
   const [now, setNow] = useState(() => Date.now());
@@ -163,12 +170,13 @@ export function AuctionsDashboard() {
   if (auctions.isError) return <><PageHeader eyebrow="Live-Auktionen" title="Auktionshaus" description="Aktive Auktionen durchsuchen, sortieren und beobachten." /><ErrorState message={auctions.error.message} onRetry={() => auctions.refetch()} /></>;
 
   return (
-    <>
+    <div id="auctions-start" className="scroll-progress-section">
+      <ScrollProgress sections={AUCTION_SECTIONS} />
       <PageHeader eyebrow="Live-Auktionen" title="Auktionshaus" description="Alle öffentlich sichtbaren Auktionen mit Echtzeit-Restzeit, präzisen Filtern und lokalen Favoriten." actions={<><DataFreshness meta={auctions.data?.meta} fetching={auctions.isFetching} /><RefreshButton fetching={auctions.isFetching || categories.isFetching} onRefresh={() => { auctions.refetch(); categories.refetch(); }} /></>} />
       {auctions.data?.meta.stale ? <StaleBanner message={auctions.data.meta.error} /> : null}
       {categories.isError ? <StaleBanner message="Die lesbaren Kategorienamen sind vorübergehend nicht verfügbar. Auktionen und technische Kategorien bleiben nutzbar." /> : null}
       <Card>
-        <div className="toolbar">
+        <div id="auctions-filters" className="toolbar scroll-progress-section">
           <div className="field-group search-field"><FieldLabel htmlFor="auction-search">Suche</FieldLabel><div className="field-with-icon"><Search size={16} /><Input id="auction-search" value={query} onChange={(event) => updateFilters({ query: event.target.value })} placeholder="Itemname oder Material" /></div></div>
           <div className="field-group auction-category-filter"><FieldLabel htmlFor="auction-category">Kategorie</FieldLabel><div className="field-with-icon"><Layers3 size={16} /><Select id="auction-category" className="auction-category-select" value={category} onChange={(event) => updateFilters({ category: event.target.value })}><option value="">Alle Kategorien</option>{category && !categoryNames.has(category) ? <option value={category}>{formatMaterialName(category)}</option> : null}{categoryNavigation.standalone.length ? <optgroup label="Weitere Kategorien">{categoryNavigation.standalone.map((item) => <option key={item.name} value={item.name}>{item.displayName}</option>)}</optgroup> : null}{categoryNavigation.groups.map((group) => <optgroup key={group.parent.name} label={group.parent.displayName}><option value={group.parent.name}>{group.parent.displayName} (alle)</option>{group.children.map((item) => <option key={item.name} value={item.name}>{item.displayName}</option>)}</optgroup>)}</Select></div></div>
           <div className="field-group price-filter"><FieldLabel htmlFor="auction-min">Mindestpreis ($)</FieldLabel><Input id="auction-min" inputMode="decimal" value={minimum} onChange={(event) => updateFilters({ minimum: event.target.value })} placeholder="0" /></div>
@@ -179,18 +187,20 @@ export function AuctionsDashboard() {
           <span className="toolbar-summary">{filtered.length} von {auctions.data?.data.length ?? 0} Auktionen</span>
         </div>
 
-        {filtered.length === 0 ? <div className="p-4"><EmptyState title="Keine passenden Auktionen" description="Die aktuellen Auktionen erfüllen diese Filter nicht. Filter lassen sich jederzeit zurücksetzen." action={hasFilters ? <Button onClick={clearFilters}>Filter zurücksetzen</Button> : undefined} /></div> : view === "table" ? (
-          <>
-            <div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.isPlaceholder ? null : header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id} className={new Date(row.original.endTime).getTime() <= now ? "expired-row" : undefined}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div>
-            <div className="mobile-card-list">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div>
-            <Pagination table={table} />
-          </>
-        ) : (
-          <><div className="auction-card-grid">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div><Pagination table={table} /></>
-        )}
+        <div id="auctions-results" className="scroll-progress-section">
+          {filtered.length === 0 ? <div className="p-4"><EmptyState title="Keine passenden Auktionen" description="Die aktuellen Auktionen erfüllen diese Filter nicht. Filter lassen sich jederzeit zurücksetzen." action={hasFilters ? <Button onClick={clearFilters}>Filter zurücksetzen</Button> : undefined} /></div> : view === "table" ? (
+            <>
+              <div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.isPlaceholder ? null : header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id} className={new Date(row.original.endTime).getTime() <= now ? "expired-row" : undefined}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div>
+              <div className="mobile-card-list">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div>
+              <Pagination table={table} />
+            </>
+          ) : (
+            <><div className="auction-card-grid">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div><Pagination table={table} /></>
+          )}
+        </div>
       </Card>
       <AuctionDialog auction={selected} open={Boolean(selected)} onClose={() => setSelected(null)} categoryName={selected ? categoryNames.get(selected.category) : undefined} now={now} />
-    </>
+    </div>
   );
 }
 

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
+import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
 import { useMarketHistory, useMarketItems, useMarketPrice, useMarketPrices } from "@/hooks/use-opsucht";
 import { useRecentMarketItems } from "@/hooks/use-recent-market-items";
 import { formatDateTime, formatDetailedPrice, formatEconomyValue, formatMaterialName, formatPrice, formatShortDateTime, parseOpsuchtDate } from "@/lib/format";
@@ -29,6 +30,13 @@ const periods: Array<{ key: HistoryPeriod; label: string; viewLabel: string }> =
   { key: "DAILY", label: "Tage", viewLabel: "Tagesansicht" },
   { key: "WEEKLY", label: "Wochen", viewLabel: "Wochenansicht" },
   { key: "MONTHLY", label: "Monate", viewLabel: "Monatsansicht" },
+];
+
+const ITEM_DETAIL_SECTIONS: ScrollProgressSection[] = [
+  { id: "market-item-start", label: "Item-Überblick" },
+  { id: "market-item-prices", label: "Aktuelle Kurse" },
+  { id: "market-item-history", label: "Preisverlauf" },
+  { id: "market-item-stats", label: "Historische Kennzahlen" },
 ];
 
 export function ItemDetailDashboard({ material }: { material: string }) {
@@ -83,7 +91,8 @@ export function ItemDetailDashboard({ material }: { material: string }) {
   if (price.isError && !row) return <><PageHeader eyebrow="Item-Analyse" title={name} description="Aktuelle Kurse und historische Marktdaten." /><ErrorState message={price.error.message} onRetry={() => { price.refetch(); allPrices.refetch(); }} /></>;
 
   return (
-    <>
+    <div id="market-item-start" className="scroll-progress-section">
+      <ScrollProgress sections={ITEM_DETAIL_SECTIONS} />
       <Link className="back-link" href={row?.category ? `/market?category=${encodeURIComponent(row.category)}` : "/market"}><ArrowLeft size={15} /> Zurück zur {row?.category ? `Kategorie ${row.category}` : "Marktübersicht"}</Link>
       <PageHeader
         eyebrow="Item-Analyse"
@@ -102,12 +111,12 @@ export function ItemDetailDashboard({ material }: { material: string }) {
         <div className="identity-update"><span>Letzte Aktualisierung</span><strong>{formatDateTime(currentPriceMeta?.cachedAt)}</strong></div>
       </Card>
 
-      <div className="stat-grid current-price-grid mt-4">
+      <div id="market-item-prices" className="stat-grid current-price-grid scroll-progress-section mt-4">
         <MetricCard label="Kaufkurs (BUY)" value={formatPrice(buyPrice)} note={`${formatEconomyValue(buyOrders)} aktive Kaufaufträge`} icon={ShoppingCart} title={`Preis: ${formatDetailedPrice(buyPrice)}`} />
         <MetricCard label="Verkaufskurs (SELL)" value={formatPrice(sellPrice)} note={`${formatEconomyValue(sellOrders)} aktive Verkaufsaufträge`} icon={Tag} color="#0ea5a4" title={`Preis: ${formatDetailedPrice(sellPrice)}`} />
       </div>
 
-      <Card className="mt-5">
+      <Card id="market-item-history" className="scroll-progress-section mt-5">
         <CardHeader title="Preisverlauf" description="Durchschnittlicher Transaktionspreis aus der Markt-Historie" action={<div className="chart-controls" aria-label="Zeitraum auswählen">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
         {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält die ${periodViewLabel(period)} keine Datenpunkte.`} /></div> : (
           <>
@@ -126,13 +135,13 @@ export function ItemDetailDashboard({ material }: { material: string }) {
         )}
       </Card>
 
-      <div className="stat-grid history-stats mt-4">
+      <div id="market-item-stats" className="stat-grid history-stats scroll-progress-section mt-4">
         <MetricCard label="Niedrigster Ø-Kurs" value={formatPrice(stats.minimum)} note={historyNote} icon={TrendingDown} title={`Preis: ${formatDetailedPrice(stats.minimum)}`} />
         <MetricCard label="Höchster Ø-Kurs" value={formatPrice(stats.maximum)} note={historyNote} icon={TrendingUp} color="#c2414b" title={`Preis: ${formatDetailedPrice(stats.maximum)}`} />
         <MetricCard label="Ø der Datenpunkte" value={formatPrice(stats.average)} note={history.isError ? historyNote : "Arithmetisches Mittel der avgPrice-Werte"} icon={BarChart3} color="#8b5cf6" title={`Preis: ${formatDetailedPrice(stats.average)}`} />
         <MetricCard label="Handelsaktivität" value={history.isError ? "Nicht verfügbar" : `${formatEconomyValue(stats.items)} Items`} note={history.isError ? historyNote : `${formatEconomyValue(stats.transactions)} Transaktionen`} icon={Package} color="#0ea5a4" />
       </div>
-    </>
+    </div>
   );
 }
 

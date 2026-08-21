@@ -1014,6 +1014,170 @@ html[data-theme="dark"] .button-primary { border-color: var(--accent); backgroun
 .item-icon { border-radius: 10px; corner-shape: squircle; }
 .dialog { border-radius: var(--radius-lg); corner-shape: squircle; }
 
+.scroll-progress-section { scroll-margin-top: 84px; }
+
+.scroll-progress {
+  position: fixed;
+  bottom: 24px;
+  left: calc(50% + 118px);
+  z-index: 45;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity 150ms ease-out, transform 160ms ease-out;
+}
+.scroll-progress.is-scrollable {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+.scroll-progress-measure {
+  position: absolute;
+  visibility: hidden;
+  pointer-events: none;
+}
+.scroll-progress-pill-content,
+.scroll-progress-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 13px 6px 7px;
+  white-space: nowrap;
+}
+.scroll-progress-pill-content {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+}
+.scroll-progress-ring-placeholder,
+.scroll-progress-ring {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+.scroll-progress-menu-content {
+  width: max-content;
+  min-width: 208px;
+  display: grid;
+  gap: 2px;
+  padding: 6px;
+}
+.scroll-progress-menu-content > span {
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  padding: 0 12px 0 29px;
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.scroll-progress-surface {
+  position: relative;
+  min-width: 0;
+  min-height: 34px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel) 92%, transparent);
+  box-shadow: 0 1px 2px rgb(41 41 41 / 8%), 0 10px 30px rgb(41 41 41 / 10%);
+  backdrop-filter: blur(14px);
+  corner-shape: squircle;
+  transition: width 160ms ease-out, height 160ms ease-out, border-radius 160ms ease-out;
+}
+.scroll-progress[data-open] .scroll-progress-surface { border-radius: 22px; }
+.scroll-progress-trigger {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 100ms ease-out, background-color 140ms ease-out;
+}
+.scroll-progress-trigger:hover { background: var(--panel-strong); }
+.scroll-progress-trigger:active { transform: translateY(1px) scale(.985); }
+.scroll-progress-trigger:focus-visible,
+.scroll-progress-menu button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -3px;
+}
+.scroll-progress[data-open] .scroll-progress-trigger {
+  opacity: 0;
+  pointer-events: none;
+}
+.scroll-progress-ring { transform: rotate(-90deg); }
+.scroll-progress-ring circle {
+  fill: none;
+  stroke-width: 2.25;
+}
+.scroll-progress-ring-track { stroke: color-mix(in srgb, var(--ink) 14%, transparent); }
+.scroll-progress-ring-value {
+  stroke: var(--accent);
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+}
+.scroll-progress-label {
+  overflow: hidden;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 20px;
+  text-overflow: ellipsis;
+  animation: scroll-progress-label-in 160ms ease-out;
+}
+.scroll-progress-menu {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: start;
+  gap: 2px;
+  padding: 6px;
+  opacity: 0;
+  pointer-events: none;
+  filter: blur(3px);
+  transition: opacity 100ms ease-out, filter 100ms ease-out;
+}
+.scroll-progress[data-open] .scroll-progress-menu {
+  opacity: 1;
+  pointer-events: auto;
+  filter: blur(0);
+  transition-duration: 160ms;
+}
+.scroll-progress-menu button {
+  position: relative;
+  min-height: 34px;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  corner-shape: squircle;
+  transition: color 140ms ease-out, background-color 140ms ease-out;
+}
+.scroll-progress-menu button:hover { color: var(--text); background: var(--panel-strong); }
+.scroll-progress-menu button.is-active { color: var(--text); background: var(--accent-soft); }
+.scroll-progress-dot {
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--ink) 30%, transparent);
+}
+.scroll-progress-menu button.is-active .scroll-progress-dot { background: var(--accent); }
+
+@keyframes scroll-progress-label-in {
+  from { opacity: 0; filter: blur(1.5px); }
+  to { opacity: 1; filter: blur(0); }
+}
+
 @media (max-width: 1180px) {
   .sidebar { width: 216px; }
   .app-column { margin-left: 216px; }
@@ -1031,6 +1195,7 @@ html[data-theme="dark"] .button-primary { border-color: var(--accent); backgroun
   .mobile-bottom-nav a,
   .mobile-bottom-nav button { border-radius: 999px; }
   .mobile-bottom-nav a.active { background: var(--accent-soft); color: var(--accent); box-shadow: none; }
+  .scroll-progress { bottom: calc(74px + env(safe-area-inset-bottom)); left: 50%; }
 }
 
 @media (max-width: 680px) {
@@ -1054,4 +1219,10 @@ html[data-theme="dark"] .button-primary { border-color: var(--accent); backgroun
 @media (prefers-reduced-motion: reduce) {
   .button { transition: none; }
   .button:active:not(:disabled) { transform: none; }
+  .scroll-progress,
+  .scroll-progress-surface,
+  .scroll-progress-trigger,
+  .scroll-progress-menu { transition: none; }
+  .scroll-progress-trigger:active { transform: none; }
+  .scroll-progress-label { animation: none; }
 }
