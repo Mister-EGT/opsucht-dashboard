@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader } from "@/components/ui/card";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useMarketHistory, useMarketItems, useMarketPrice, useMarketPrices } from "@/hooks/use-opsucht";
 import { useRecentMarketItems } from "@/hooks/use-recent-market-items";
 import { formatDateTime, formatDetailedPrice, formatEconomyValue, formatMaterialName, formatPrice, formatShortDateTime, parseOpsuchtDate } from "@/lib/format";
@@ -117,7 +118,27 @@ export function ItemDetailDashboard({ material }: { material: string }) {
       </div>
 
       <Card id="market-item-history" className="scroll-progress-section mt-5">
-        <CardHeader title="Preisverlauf" description="Durchschnittlicher Transaktionspreis aus der Markt-Historie" action={<div className="chart-controls" aria-label="Zeitraum auswählen">{periods.map((option) => <button key={option.key} className={cn(period === option.key && "active")} aria-pressed={period === option.key} onClick={() => setPeriod(option.key)}>{option.label}</button>)}</div>} />
+        <CardHeader
+          title="Preisverlauf"
+          description="Durchschnittlicher Transaktionspreis aus der Markt-Historie"
+          action={(
+            <ToggleGroup
+              className="chart-controls"
+              value={[period]}
+              onValueChange={(value) => {
+                const nextPeriod = value[0] as HistoryPeriod | undefined;
+                if (nextPeriod) setPeriod(nextPeriod);
+              }}
+              aria-label="Zeitraum auswählen"
+            >
+              {periods.map((option) => (
+                <ToggleGroupItem key={option.key} value={option.key} className={cn(period === option.key && "active")}>
+                  {option.label}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+          )}
+        />
         {history.isError ? <div className="p-4"><ErrorState message={history.error.message} onRetry={() => history.refetch()} /></div> : chartData.length === 0 ? <div className="p-4"><EmptyState title="Kein Preisverlauf verfügbar" description={`Für ${name} enthält die ${periodViewLabel(period)} keine Datenpunkte.`} /></div> : (
           <>
             <div className="chart-container" role="img" aria-label={chartSummary(name, period, points)}>

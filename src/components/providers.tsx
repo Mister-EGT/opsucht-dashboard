@@ -6,6 +6,7 @@ import { AccountProvider } from "@/components/account-provider";
 import { FavoritesProvider } from "@/components/favorites-provider";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -24,11 +25,13 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
-        <ToastProvider>
-          <AccountProvider>
-            <FavoritesProvider>{children}</FavoritesProvider>
-          </AccountProvider>
-        </ToastProvider>
+        <TooltipProvider delay={350}>
+          <ToastProvider>
+            <AccountProvider>
+              <FavoritesProvider>{children}</FavoritesProvider>
+            </AccountProvider>
+          </ToastProvider>
+        </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
   );
