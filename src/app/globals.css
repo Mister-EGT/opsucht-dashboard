@@ -1,4 +1,62 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
+}
+
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-background: var(--page);
+  --color-foreground: var(--text);
+  --color-card: var(--panel);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--panel);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--panel-soft);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--panel-soft);
+  --color-muted-foreground: var(--text-muted);
+  --color-accent: var(--accent-soft);
+  --color-accent-foreground: var(--text);
+  --color-destructive: var(--danger);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+}
 
 :root {
   --font-sans: "Google Sans Flex", "Google Sans", Inter, Arial, sans-serif;
@@ -123,6 +181,9 @@ kbd { display: inline-flex; align-items: center; gap: 2px; padding: 2px 6px; bor
 .topbar-icon-action { width: 39px; height: 39px; display: grid; flex: 0 0 auto; place-items: center; border: 1px solid var(--border); border-radius: 8px; background: var(--panel); color: var(--text-muted); cursor: pointer; }
 .topbar-icon-action:hover { border-color: var(--border-strong); color: var(--text); }
 .theme-switcher select { max-width: 70px; border: 0; outline: 0; background: transparent; color: inherit; cursor: pointer; }
+.theme-switcher svg { width: 16px; height: 16px; }
+.theme-menu { width: auto; min-width: 164px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); box-shadow: 0 1px 2px rgb(0 0 0 / 8%), 0 8px 24px rgb(0 0 0 / 8%); }
+.theme-menu [data-slot="dropdown-menu-radio-item"] { min-height: 34px; border-radius: 9px; }
 .mobile-menu-button { display: none; border: 0; background: none; color: var(--text); }
 .main-content { flex: 1; width: 100%; max-width: 1660px; margin: 0 auto; padding: 30px; }
 .footer { min-height: 65px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 16px 30px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 12px; }

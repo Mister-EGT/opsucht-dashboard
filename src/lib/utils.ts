@@ -2,6 +2,14 @@ export function cn(...values: Array<string | false | null | undefined>): string 
   return values.filter(Boolean).join(" ");
 }
 
+export function mergeClassName<State>(
+  baseClassName: string,
+  className?: string | ((state: State) => string | undefined),
+): string | ((state: State) => string) {
+  if (typeof className === "function") return (state) => cn(baseClassName, className(state));
+  return cn(baseClassName, className);
+}
+
 export function downloadTextFile(filename: string, content: string, type: string): void {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);

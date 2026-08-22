@@ -273,6 +273,7 @@ kbd { border-color: var(--border); border-radius: 4px; background: var(--panel-s
 .topbar-icon-action { width: 34px; padding: 0; }
 .quick-action:hover, .theme-switcher:hover, .topbar-icon-action:hover, .topbar-account:hover { border-color: var(--border-strong); background: var(--panel-soft); color: var(--text); }
 .theme-switcher select { max-width: 68px; }
+.theme-switcher svg { width: 15px; height: 15px; }
 .topbar-account span { max-width: 112px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mobile-menu-button { display: none; }
 

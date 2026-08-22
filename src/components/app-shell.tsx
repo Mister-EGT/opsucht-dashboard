@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Menu, Plus, Shield, UserRound, X } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { GlobalSearch } from "@/components/global-search";
 import { navigationItems, pageLabel } from "@/components/navigation";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ShareCurrentView } from "@/components/share-current-view";
 import { useAccount } from "@/components/account-provider";
-import { Button } from "@/components/ui/button";
+import { buttonClassName } from "@/components/ui/button";
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn, safeDecodeURIComponent } from "@/lib/utils";
 
 const navigationGroups = ["Analyse", "Werkzeuge"] as const;
@@ -23,47 +24,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const account = useAccount();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLElement>(null);
   const currentLabel = pageLabel(pathname);
   const detailMaterial = pathname.startsWith("/market/") ? safeDecodeURIComponent(pathname.split("/")[2] ?? "") : null;
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const previouslyFocused = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const frame = requestAnimationFrame(() => menuRef.current?.querySelector<HTMLElement>("[data-menu-close]")?.focus());
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setMenuOpen(false);
-        return;
-      }
-      if (event.key !== "Tab" || !menuRef.current) return;
-      const focusable = [...menuRef.current.querySelectorAll<HTMLElement>(
-        'a[href], button:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
-      )].filter((element) => !element.hidden);
-      const first = focusable[0];
-      const last = focusable.at(-1);
-      if (!first || !last) return;
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault();
-        last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault();
-        first.focus();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      cancelAnimationFrame(frame);
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = previousOverflow;
-      previouslyFocused?.focus();
-    };
-  }, [menuOpen]);
 
   return (
     <div className="app-shell">
@@ -129,16 +91,18 @@ export function AppShell({ children }: { children: ReactNode }) {
         <button onClick={() => setMenuOpen(true)} aria-expanded={menuOpen} aria-controls="mobile-navigation"><Menu size={20} aria-hidden="true" /><span>Mehr</span></button>
       </nav>
 
-      {menuOpen ? (
-        <div className="mobile-nav-overlay" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
-          <aside ref={menuRef} id="mobile-navigation" className="mobile-nav-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-navigation-title">
-            <div className="mobile-nav-heading"><span id="mobile-navigation-title">Navigation</span><Button data-menu-close variant="ghost" size="icon" onClick={() => setMenuOpen(false)} aria-label="Navigation schließen"><X size={20} /></Button></div>
+      <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+        <SheetContent id="mobile-navigation" side="left" className="mobile-nav-sheet" showCloseButton={false}>
+          <SheetHeader className="mobile-nav-heading">
+            <SheetTitle id="mobile-navigation-title">Navigation</SheetTitle>
+            <SheetDescription className="sr-only">Alle Bereiche des OPSUCHT Wirtschaftsdashboards</SheetDescription>
+            <SheetClose className={buttonClassName({ variant: "ghost", size: "icon" })} aria-label="Navigation schließen"><X aria-hidden="true" /></SheetClose>
+          </SheetHeader>
             <nav>{navigationItems.map((item) => <NavigationLink key={item.href} item={item} active={isActive(pathname, item.href)} onClick={() => setMenuOpen(false)} />)}</nav>
             {account.access?.role === "admin" && account.access.status === "active" ? <Link href="/admin" className={cn("nav-link", isActive(pathname, "/admin") && "active")} onClick={() => setMenuOpen(false)}><span className="nav-icon"><Shield size={18} /></span><span className="nav-copy"><strong>Administration</strong><small>Konten und Cloud-Funktionen</small></span></Link> : null}
             <ThemeSwitcher />
-          </aside>
-        </div>
-      ) : null}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

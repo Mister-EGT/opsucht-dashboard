@@ -30,6 +30,7 @@ import { Card } from "@/components/ui/card";
 import { FieldLabel, Input, Select } from "@/components/ui/form";
 import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/ui/states";
 import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { auctionFilterHref, parseAuctionFilters } from "@/lib/filter-url";
 import { buildAuctionCategoryNavigation } from "@/lib/auction-categories";
 import { formatMaterialName, formatRelativeTime } from "@/lib/format";
@@ -183,7 +184,19 @@ export function AuctionsDashboard() {
           <div className="field-group price-filter"><FieldLabel htmlFor="auction-max">Höchstpreis ($)</FieldLabel><Input id="auction-max" inputMode="decimal" value={maximum} onChange={(event) => updateFilters({ maximum: event.target.value })} placeholder="Unbegrenzt" /></div>
           <label className="check-field"><input type="checkbox" checked={soon} onChange={(event) => updateFilters({ soon: event.target.checked })} /> Endet in 15 Min.</label>
           {hasFilters ? <Button variant="ghost" onClick={clearFilters}><FilterX size={16} /> Filter löschen</Button> : null}
-          <div className="view-toggle" aria-label="Ansicht wählen"><button className={cn(view === "table" && "active")} aria-pressed={view === "table"} onClick={() => updateFilters({ view: "table" })} aria-label="Tabellenansicht"><List size={17} /></button><button className={cn(view === "cards" && "active")} aria-pressed={view === "cards"} onClick={() => updateFilters({ view: "cards" })} aria-label="Kartenansicht"><Grid2X2 size={17} /></button></div>
+          <ToggleGroup
+            className="view-toggle"
+            spacing={0}
+            value={[view]}
+            onValueChange={(value) => {
+              const nextView = value[0] as "table" | "cards" | undefined;
+              if (nextView) updateFilters({ view: nextView });
+            }}
+            aria-label="Ansicht wählen"
+          >
+            <ToggleGroupItem value="table" className={cn(view === "table" && "active")} aria-label="Tabellenansicht"><List aria-hidden="true" /></ToggleGroupItem>
+            <ToggleGroupItem value="cards" className={cn(view === "cards" && "active")} aria-label="Kartenansicht"><Grid2X2 aria-hidden="true" /></ToggleGroupItem>
+          </ToggleGroup>
           <span className="toolbar-summary">{filtered.length} von {auctions.data?.data.length ?? 0} Auktionen</span>
         </div>
 
