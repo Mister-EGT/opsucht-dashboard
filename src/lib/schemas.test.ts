@@ -31,6 +31,16 @@ describe("OPSUCHT-Zod-Parser", () => {
     expect(parsed[0]?.futureAuctionField).toBe("erlaubt");
   });
 
+  it("übernimmt das neue API-Icon eines Custom-Items", () => {
+    const parsed = parseAuctions([{
+      uid: "custom-123",
+      item: { material: "GOLDEN_HORSE_ARMOR", amount: 1, displayName: "Thanos Handschuh", icon: "https://api.opsucht.net/icons/thanos.png" },
+      category: "custom_items", startBid: 100, currentBid: 100,
+      startTime: "2026-09-25T09:00:00Z", endTime: "2026-09-25T12:00:00Z",
+    }]);
+    expect(parsed[0]?.item.icon).toBe("https://api.opsucht.net/icons/thanos.png");
+  });
+
   it("weist eine Auktionsantwort ohne stabile UID zurück", () => {
     expect(() => parseAuctions([{ item: {}, category: "custom_items" }])).toThrow();
   });

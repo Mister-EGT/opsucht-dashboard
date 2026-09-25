@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { useAuctionStream } from "@/hooks/use-auction-stream";
 import { fetchApi, fetchHealth } from "@/lib/api-client";
 import type {
   Auction,
@@ -17,11 +18,12 @@ import type { MinecraftPlayerProfile } from "@/lib/minecraft-player";
 
 export function useAuctions(category?: string, enabled = true) {
   const suffix = category ? `?category=${encodeURIComponent(category)}` : "";
+  const streamConnected = useAuctionStream(enabled);
   return useQuery({
     queryKey: ["auctions", category ?? "all"],
     queryFn: ({ signal }) => fetchApi<Auction[]>(`/api/opsucht/auctions${suffix}`, signal),
     staleTime: 30_000,
-    refetchInterval: 30_000,
+    refetchInterval: (query) => streamConnected && query.state.data && !query.state.data.meta.stale ? false : 30_000,
     enabled,
   });
 }

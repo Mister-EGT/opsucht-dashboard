@@ -9,7 +9,7 @@ Live: [opsucht-dashboard.vercel.app](https://opsucht-dashboard.vercel.app)
 ## Funktionsumfang
 
 - Übersichtsseite mit echten Kennzahlen, Preisextremen, stündlichen Marktbewegungen, API-Zustand, bald endenden Auktionen und Favoriten
-- Auktionshaus mit Suche, Kategorien, Preisfiltern, Echtzeit-Countdown, Tabellen- und Kartenansicht, URL-Filtern, Detaildialog sowie aufgelösten Namen und Köpfen für Verkäufer und Höchstbietende
+- Auktionshaus mit Suche, Kategorien, Preisfiltern, Echtzeit-Countdown, Tabellen- und Kartenansicht, URL-Filtern, Detaildialog, API-Icons für Custom Items sowie aufgelösten Namen und Köpfen für Verkäufer und Höchstbietende
 - Marktübersicht mit der vollständigen aktuell erfassten Itemliste, Kategorien, BUY- und SELL-Kursen, Auftragsbeständen, Spreads und mobilen Karten
 - Item-Detailseiten mit vier Zeiträumen, einem zwischen Kauf- und Verkaufskurs umschaltbaren Diagramm, exakten Tooltips und Zeitraumstatistiken
 - Händlerseite mit Parser für Minecraft-Komponentenstrings, Custom-Namen, Custom Model Data und Rechner für OPShards sowie Redcoins
@@ -202,6 +202,8 @@ Die zentralen Intervalle stehen in `src/server/opsucht-api.ts`:
 | Einzelpreis | 60 Sekunden |
 | Händlerkurse | 60 Sekunden |
 | Preisverlauf | 5 Minuten |
+
+Auktionen beginnen mit einem validierten Snapshot aus `/auctions/active`. Anschließend leitet `/api/opsucht/auctions/stream` die Server-Sent Events von `/auctions/stream` unverändert an den Browser weiter. Neue und geänderte Auktionen aktualisieren den lokalen Datenbestand; abgeschlossene Auktionen werden entfernt. Kategorien werden bei Änderungen mit der API abgeglichen. Der Browser reicht bei Wiederverbindungen die letzte Event-ID weiter und lädt nach Verbindungsaufbau oder `stream.reset` einen neuen Snapshot. Solange der Stream unterbrochen ist, fragt das Dashboard alle 30 Sekunden ab. Die Stream-Route leitet nur das festgelegte GET-Ziel weiter; JSON-Events werden im Browser mit Zod validiert.
 
 Der OPSUCHT-Cache lebt im Next.js-Serverprozess. Bei einem Neustart oder bei einer neuen serverlosen Instanz beginnt die Statushistorie neu. Für öffentliche Wirtschafts- und API-Daten ist weiterhin keine Datenbank erforderlich; Supabase speichert ausschließlich optionale Kontodaten und Favoriten.
 

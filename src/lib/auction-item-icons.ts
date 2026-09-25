@@ -185,12 +185,12 @@ function materialIcon(material: string): string {
 
 /**
  * Ermittelt das beste Auktionsbild in derselben Reihenfolge wie opsucht.info:
- * Custom-Icon, API-Icon, Sammelkarten-Icon und zuletzt das Standardmaterial.
+ * API-Icon, ältere Custom-Item-Zuordnung, Sammelkarten-Icon und Standardmaterial.
  */
 export function resolveAuctionItemIcon(item: AuctionIconItem): string {
+  if (item.icon && !item.icon.includes("NONE")) return item.icon;
   const customIcon = customIconFor(item);
   if (customIcon) return customIcon;
-  if (item.icon && !item.icon.includes("NONE")) return item.icon;
   if (isCardOrBooster(item)) return CARD_TEXTURE;
   return materialIcon(item.material);
 }

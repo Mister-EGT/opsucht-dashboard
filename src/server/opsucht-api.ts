@@ -20,7 +20,11 @@ import {
 import type { ApiErrorEnvelope, ApiMeta } from "@/lib/types";
 
 const API_BASE_URL = process.env.OPSUCHT_API_BASE_URL ?? "https://api.opsucht.net";
-const USER_AGENT =
+
+export function auctionStreamUrl(): string {
+  return `${API_BASE_URL}/auctions/stream`;
+}
+export const USER_AGENT =
   process.env.OPSUCHT_API_USER_AGENT ??
   "OPSUCHT-Economy-Dashboard/1.0 (+community-dashboard)";
 
