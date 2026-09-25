@@ -23,6 +23,14 @@ describe("Auktions-Itembilder", () => {
     })).toBe("https://i.postimg.cc/rmSJ2qB0/Hacker-schuhe.png");
   });
 
+  it("bevorzugt von der API gelieferte Custom-Item-Icons vor der alten Zuordnung", () => {
+    expect(resolveAuctionItemIcon({
+      material: "GOLDEN_HORSE_ARMOR",
+      displayName: "Thanos Handschuh",
+      icon: "https://api.opsucht.net/icons/new-thanos.png",
+    })).toBe("https://api.opsucht.net/icons/new-thanos.png");
+  });
+
   it("behält vorhandene API-Icons bei unbekannten Items bei", () => {
     expect(resolveAuctionItemIcon({
       material: "BOW",

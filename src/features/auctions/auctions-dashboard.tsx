@@ -65,6 +65,7 @@ export function AuctionsDashboard() {
   const { notify } = useToast();
   const auctions = useAuctions(category || undefined);
   const categories = useAuctionCategories();
+  const selectedAuction = selected ? auctions.data?.data.find((auction) => auction.uid === selected.uid) ?? null : null;
 
   useEffect(() => {
     const next = parseAuctionFilters(searchKey);
@@ -212,7 +213,7 @@ export function AuctionsDashboard() {
           )}
         </div>
       </Card>
-      <AuctionDialog auction={selected} open={Boolean(selected)} onClose={() => setSelected(null)} categoryName={selected ? categoryNames.get(selected.category) : undefined} now={now} />
+      <AuctionDialog auction={selectedAuction} open={Boolean(selectedAuction)} onClose={() => setSelected(null)} categoryName={selectedAuction ? categoryNames.get(selectedAuction.category) : undefined} now={now} />
     </div>
   );
 }
