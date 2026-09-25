@@ -32,7 +32,9 @@ describe("Auktions-Live-Events", () => {
     const updated = applyAuctionStreamChange(afterCreate, bid);
     expect(updated?.data).toHaveLength(1);
     expect(updated?.data[0]?.currentBid).toBe(250);
-    expect(updated?.meta.stale).toBe(false);
+    expect(updated?.meta.stale).toBe(true);
+    const fresh = { ...snapshot, meta: { ...snapshot.meta, stale: false } };
+    expect(applyAuctionStreamChange(fresh, created)?.meta.stale).toBe(false);
   });
 
   it("entfernt abgeschlossene Auktionen und toleriert ein zweites Entfernen", () => {
