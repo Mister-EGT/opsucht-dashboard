@@ -3,6 +3,7 @@
 import { useQueryClient, type QueryClient } from "@tanstack/react-query";
 import { useEffect, useSyncExternalStore } from "react";
 import { applyAuctionStreamChange, parseAuctionStreamChange } from "@/lib/auction-stream";
+import { fetchApi } from "@/lib/api-client";
 import type { Auction } from "@/lib/schemas";
 import type { ApiEnvelope } from "@/lib/types";
 
@@ -59,13 +60,36 @@ function startStream(queryClient: QueryClient) {
     });
   };
 
+  const refreshActiveSnapshots = async () => {
+    // A stream.reset means events were missed. Bypass the 30-second server cache
+    // once; invalidating TanStack Query alone would return the old snapshot.
+    await queryClient.cancelQueries({ queryKey: ["auctions"] });
+    const active = queryClient.getQueryCache().findAll({ queryKey: ["auctions"], type: "active" });
+    const results = await Promise.allSettled(active.map(async (query) => {
+      const category = query.queryKey[1];
+      if (typeof category !== "string") return;
+      const params = new URLSearchParams({ refresh: "1" });
+      if (category !== "all") params.set("category", category);
+      const snapshot = await fetchApi<Auction[]>(`/api/opsucht/auctions?${params}`);
+      queryClient.setQueryData(query.queryKey, snapshot);
+    }));
+    if (results.some((result) => result.status === "rejected")) {
+      // Resume polling if a fresh snapshot could not be obtained.
+      setConnected(false);
+      await queryClient.invalidateQueries({ queryKey: ["auctions"] });
+    }
+  };
+
   const resynchronize = (discardPending = false) => {
     if (discardPending) pending = [];
     syncing = true;
     const version = ++generation;
     // Apply events arriving during the GET afterwards so an older snapshot
     // cannot overwrite a newer bid or restore an already removed auction.
-    void queryClient.invalidateQueries({ queryKey: ["auctions"] }).finally(() => {
+    const request = discardPending
+      ? refreshActiveSnapshots()
+      : queryClient.invalidateQueries({ queryKey: ["auctions"] });
+    void request.finally(() => {
       if (source !== stream || version !== generation) return;
       syncing = false;
       const changes = pending;
