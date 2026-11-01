@@ -325,13 +325,18 @@ export async function fetchOpsucht<T>(
   definition: EndpointDefinition<T>,
   options: { force?: boolean } = {},
 ): Promise<OpsuchtResult<T>> {
-  const existing = inflight.get(definition.key) as Promise<OpsuchtResult<T>> | undefined;
+  const force = options.force ?? false;
+  const forcedKey = `${definition.key}#force`;
+  const inflightKey = force ? forcedKey : definition.key;
+
+  const existing = (inflight.get(forcedKey) ??
+    (force ? undefined : inflight.get(definition.key))) as Promise<OpsuchtResult<T>> | undefined;
   if (existing) return existing;
 
-  const request = performFetch(definition, options.force ?? false).finally(() => {
-    inflight.delete(definition.key);
+  const request = performFetch(definition, force).finally(() => {
+    inflight.delete(inflightKey);
   });
-  inflight.set(definition.key, request as Promise<OpsuchtResult<unknown>>);
+  inflight.set(inflightKey, request as Promise<OpsuchtResult<unknown>>);
   return request;
 }
 
