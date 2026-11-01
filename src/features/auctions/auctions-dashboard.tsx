@@ -32,6 +32,7 @@ import { EmptyState, ErrorState, PageSkeleton, StaleBanner } from "@/components/
 import { ScrollProgress, type ScrollProgressSection } from "@/components/ui/scroll-progress";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { auctionFilterHref, parseAuctionFilters } from "@/lib/filter-url";
+import { parsePriceInput } from "@/lib/price-input";
 import { buildAuctionCategoryNavigation } from "@/lib/auction-categories";
 import { formatMaterialName, formatRelativeTime } from "@/lib/format";
 import type { Auction } from "@/lib/schemas";
@@ -42,6 +43,10 @@ const AUCTION_SECTIONS: ScrollProgressSection[] = [
   { id: "auctions-filters", label: "Filter & Ansicht" },
   { id: "auctions-results", label: "Auktionen" },
 ];
+
+function auctionItemName(item: Auction["item"]): string {
+  return item.displayName ?? formatMaterialName(item.material);
+}
 
 function useClock(): number {
   const [now, setNow] = useState(() => Date.now());
@@ -89,13 +94,13 @@ export function AuctionsDashboard() {
   const filterNow = soon ? now : 0;
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase("de-DE");
-    const min = minimum === "" ? null : Number(minimum.replace(",", "."));
-    const max = maximum === "" ? null : Number(maximum.replace(",", "."));
+    const min = parsePriceInput(minimum);
+    const max = parsePriceInput(maximum);
     return (auctions.data?.data ?? []).filter((auction) => {
-      const name = auction.item.displayName ?? formatMaterialName(auction.item.material);
+      const name = auctionItemName(auction.item);
       if (normalized && !`${name} ${auction.item.material} ${auction.category}`.toLocaleLowerCase("de-DE").includes(normalized)) return false;
-      if (min !== null && Number.isFinite(min) && auction.currentBid < min) return false;
-      if (max !== null && Number.isFinite(max) && auction.currentBid > max) return false;
+      if (min !== null && auction.currentBid < min) return false;
+      if (max !== null && auction.currentBid > max) return false;
       const remaining = new Date(auction.endTime).getTime() - filterNow;
       if (soon && (remaining <= 0 || remaining > 15 * 60_000)) return false;
       return true;
@@ -122,11 +127,11 @@ export function AuctionsDashboard() {
     },
     {
       id: "name",
-      accessorFn: (auction) => auction.item.displayName ?? formatMaterialName(auction.item.material),
+      accessorFn: (auction) => auctionItemName(auction.item),
       header: "Item",
       cell: ({ row }) => {
         const item = row.original.item;
-        const name = item.displayName ?? formatMaterialName(item.material);
+        const name = auctionItemName(item);
         return <div className="item-cell"><ItemIcon src={item.icon} name={name} size={38} /><div><strong>{name}</strong><small>{item.material}</small></div></div>;
       },
     },
@@ -190,8 +195,8 @@ export function AuctionsDashboard() {
             spacing={0}
             value={[view]}
             onValueChange={(value) => {
-              const nextView = value[0] as "table" | "cards" | undefined;
-              if (nextView) updateFilters({ view: nextView });
+              const nextView = value[0];
+              if (nextView === "table" || nextView === "cards") updateFilters({ view: nextView });
             }}
             aria-label="Ansicht wählen"
           >
@@ -205,11 +210,11 @@ export function AuctionsDashboard() {
           {filtered.length === 0 ? <div className="p-4"><EmptyState title="Keine passenden Auktionen" description="Die aktuellen Auktionen erfüllen diese Filter nicht. Filter lassen sich jederzeit zurücksetzen." action={hasFilters ? <Button onClick={clearFilters}>Filter zurücksetzen</Button> : undefined} /></div> : view === "table" ? (
             <>
               <div className="data-table-wrap desktop-table"><table className="data-table"><thead>{table.getHeaderGroups().map((group) => <tr key={group.id}>{group.headers.map((header) => { const numeric = (header.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <th key={header.id} scope="col" aria-sort={header.column.getCanSort() ? ariaSort(header.column.getIsSorted()) : undefined} className={numeric ? "numeric" : undefined}>{header.isPlaceholder ? null : header.column.getCanSort() ? <button className="sort-button" onClick={header.column.getToggleSortingHandler()}>{flexRender(header.column.columnDef.header, header.getContext())}<SortIcon state={header.column.getIsSorted()} /></button> : flexRender(header.column.columnDef.header, header.getContext())}</th>; })}</tr>)}</thead><tbody>{table.getRowModel().rows.map((row) => <tr key={row.id} className={new Date(row.original.endTime).getTime() <= now ? "expired-row" : undefined}>{row.getVisibleCells().map((cell) => { const numeric = (cell.column.columnDef.meta as { numeric?: boolean } | undefined)?.numeric; return <td key={cell.id} className={numeric ? "numeric" : undefined}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>; })}</tr>)}</tbody></table></div>
-              <div className="mobile-card-list">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div>
+              <div className="mobile-card-list">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} onCopy={() => copyMaterial(row.original.item.material)} />)}</div>
               <Pagination table={table} />
             </>
           ) : (
-            <><div className="auction-card-grid">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} />)}</div><Pagination table={table} /></>
+            <><div className="auction-card-grid">{table.getRowModel().rows.map((row) => <AuctionCard key={row.original.uid} auction={row.original} now={now} categoryName={categoryNames.get(row.original.category)} onOpen={() => setSelected(row.original)} onCopy={() => copyMaterial(row.original.item.material)} />)}</div><Pagination table={table} /></>
           )}
         </div>
       </Card>
@@ -231,16 +236,15 @@ function Countdown({ endTime, now }: { endTime: string; now: number }) {
   return <span title={new Date(endTime).toLocaleString("de-DE", { timeZone: "Europe/Berlin" })} className={expired ? "countdown expired" : "countdown"}><Clock3 size={13} />{expired ? "Beendet" : formatRelativeTime(endTime)}</span>;
 }
 
-function AuctionCard({ auction, now, categoryName, onOpen }: { auction: Auction; now: number; categoryName?: string; onOpen: () => void }) {
+function AuctionCard({ auction, now, categoryName, onOpen, onCopy }: { auction: Auction; now: number; categoryName?: string; onOpen: () => void; onCopy: () => void }) {
   const favorites = useFavorites();
-  const { notify } = useToast();
-  const name = auction.item.displayName ?? formatMaterialName(auction.item.material);
+  const name = auctionItemName(auction.item);
   const expired = new Date(auction.endTime).getTime() <= now;
   return (
     <article className={cn("mobile-data-card auction-card", expired && "expired-card")}>
       <div className="mobile-data-card-header"><ItemIcon src={auction.item.icon} name={name} size={44} /><div className="mobile-data-card-main"><strong>{name}</strong><small>{auction.item.material}</small><Badge tone={expired ? "danger" : "neutral"}>{expired ? "Beendet" : categoryName ?? auction.category}</Badge></div><Button size="icon" variant="ghost" onClick={() => favorites.toggleAuction(auction)} aria-label="Favorit umschalten"><Heart size={16} fill={favorites.isAuctionFavorite(auction.uid) ? "currentColor" : "none"} /></Button></div>
       <div className="mobile-data-values"><div className="mobile-data-value"><span>Aktuelles Gebot</span><strong><PriceValue value={auction.currentBid} /></strong></div><div className="mobile-data-value"><span>Restzeit</span><strong>{expired ? "Beendet" : formatRelativeTime(auction.endTime)}</strong></div><div className="mobile-data-value"><span>Startgebot</span><strong><PriceValue value={auction.startBid} /></strong></div><div className="mobile-data-value"><span>Menge</span><strong>{auction.item.amount}×</strong></div></div>
-      <div className="mobile-data-actions"><Button size="sm" onClick={async () => { const copied = await copyToClipboard(auction.item.material); notify(copied ? "Materialname kopiert." : "Der Materialname konnte nicht kopiert werden.", copied ? "success" : "danger"); }}><Copy size={14} /> Kopieren</Button><Button size="sm" variant="primary" onClick={onOpen}><Eye size={14} /> Details</Button></div>
+      <div className="mobile-data-actions"><Button size="sm" onClick={onCopy}><Copy size={14} /> Kopieren</Button><Button size="sm" variant="primary" onClick={onOpen}><Eye size={14} /> Details</Button></div>
     </article>
   );
 }
