@@ -62,4 +62,33 @@ describe("OPSUCHT-Proxy-Cache", () => {
       },
     });
   });
+
+  it("führt einen erzwungenen Abruf nicht mit einem laufenden normalen Abruf zusammen", async () => {
+    let release: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const fetchMock = vi.fn()
+      .mockImplementationOnce(async () => {
+        await gate;
+        return Response.json({ value: 1 });
+      })
+      .mockImplementationOnce(async () => Response.json({ value: 2 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const endpoint: EndpointDefinition<{ value: number }> = {
+      key: `test-force-inflight-${Date.now()}`,
+      path: "/test-force-inflight",
+      ttlMs: 1_000,
+      schema: z.object({ value: z.number() }),
+    };
+
+    const normal = fetchOpsucht(endpoint);
+    const forced = fetchOpsucht(endpoint, { force: true });
+    release?.();
+    const [normalResult, forcedResult] = await Promise.all([normal, forced]);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(normalResult).toMatchObject({ ok: true, data: { value: 1 } });
+    expect(forcedResult).toMatchObject({ ok: true, data: { value: 2 } });
+  });
 });
